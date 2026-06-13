@@ -12,7 +12,7 @@ export abstract class BasePage {
   }
 
   async goto() {
-    await this.page.goto(this.url);
+    await this.page.goto(this.url, { waitUntil: 'domcontentloaded' });
   }
 
   async verifyUrl() {
