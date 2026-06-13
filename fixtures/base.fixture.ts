@@ -9,15 +9,19 @@ export async function enablePlaywrightUiStyleSnapshots(page: Page) {
   const stylesheetsUrl = new RegExp(`^${escapeRegExp(APP_BASE_URL)}/assets/.*\\.css(?:\\?.*)?$`);
 
   await page.route(stylesheetsUrl, async route => {
-    const response = await route.fetch();
+    try {
+      const response = await route.fetch({ timeout: 15_000 });
 
-    await route.fulfill({
-      response,
-      headers: {
-        ...response.headers(),
-        'access-control-allow-origin': '*'
-      }
-    });
+      await route.fulfill({
+        response,
+        headers: {
+          ...response.headers(),
+          'access-control-allow-origin': '*'
+        }
+      });
+    } catch {
+      await route.continue().catch(() => undefined);
+    }
   });
 }
 
