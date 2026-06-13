@@ -18,6 +18,7 @@
   "description": "A modern TypeScript-based test suite for validating both API and UI layers of a Dockerized AWS-like application stack",
   "devDependencies": {
     "@faker-js/faker": "^10.4.0",
+    "@playwright/cli": "^0.1.14",
     "@playwright/test": "^1.59.1",
     "@types/node": "^25.9.1",
     "dotenv": "^17.4.2",

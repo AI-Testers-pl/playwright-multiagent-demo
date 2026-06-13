@@ -1,6 +1,7 @@
 import { CartPage } from '../pages/CartPage';
 import { CheckoutPage } from '../pages/CheckoutPage';
 import { EmailPage } from '../pages/EmailPage';
+import { ForgotPasswordPage } from '../pages/ForgotPasswordPage';
 import { HomePage } from '../pages/HomePage';
 import { LlmPage } from '../pages/LlmPage';
 import { LoginPage } from '../pages/LoginPage';
@@ -10,6 +11,7 @@ import { ProductsPage } from '../pages/ProductsPage';
 import { ProfilePage } from '../pages/ProfilePage';
 import { QrCodePage } from '../pages/QrCodePage';
 import { RegisterPage } from '../pages/RegisterPage';
+import { ResetPasswordPage } from '../pages/ResetPasswordPage';
 import { TrafficMonitorPage } from '../pages/TrafficMonitorPage';
 import { test as base } from './ui.fixture';
 
@@ -17,6 +19,7 @@ interface PageFixtures {
   cartPage: CartPage;
   checkoutPage: CheckoutPage;
   emailPage: EmailPage;
+  forgotPasswordPage: ForgotPasswordPage;
   homePage: HomePage;
   llmPage: LlmPage;
   loginPage: LoginPage;
@@ -26,6 +29,7 @@ interface PageFixtures {
   profilePage: ProfilePage;
   qrCodePage: QrCodePage;
   registerPage: RegisterPage;
+  resetPasswordPage: ResetPasswordPage;
   trafficMonitorPage: TrafficMonitorPage;
 }
 
@@ -40,6 +44,10 @@ export const test = base.extend<PageFixtures>({
 
   emailPage: async ({ page }, use) => {
     await use(new EmailPage(page));
+  },
+
+  forgotPasswordPage: async ({ page }, use) => {
+    await use(new ForgotPasswordPage(page));
   },
 
   homePage: async ({ page }, use) => {
@@ -76,6 +84,10 @@ export const test = base.extend<PageFixtures>({
 
   registerPage: async ({ page }, use) => {
     await use(new RegisterPage(page));
+  },
+
+  resetPasswordPage: async ({ page }, use) => {
+    await use(new ResetPasswordPage(page));
   },
 
   trafficMonitorPage: async ({ page }, use) => {

@@ -1,11 +1,10 @@
 ---
 name: playwright-cli
-description: Automate browser interactions, inspect and test web pages, generate or debug Playwright tests, capture screenshots/PDFs/videos/traces, manage browser sessions and storage state, mock requests, and run Playwright CLI workflows. Use when Codex should drive a browser with the local playwright-cli command, verify local or remote pages, collect snapshots, interact with UI elements, or work with Playwright test projects.
+description: Automate browser interactions, test web pages and work with Playwright tests.
+allowed-tools: Bash(playwright-cli:*) Bash(npx:*) Bash(npm:*)
 ---
 
 # Browser Automation with playwright-cli
-
-Run commands through Codex shell tools from the relevant project directory. Prefer `playwright-cli` when it is available; use `npx playwright-cli` when the global command is unavailable and a local package exists.
 
 ## Quick start
 
@@ -164,6 +163,10 @@ playwright-cli video-start video.webm
 playwright-cli video-chapter "Chapter Title" --description="Details" --duration=2000
 playwright-cli video-stop
 
+# annotate each subsequent action (click, type, ...) with a callout naming the action and highlighting the target
+playwright-cli video-show-actions --duration=600 --position=top-right
+playwright-cli video-hide-actions
+
 # launch the dashboard for UI review / design feedback — user annotates the page, you receive the annotated screenshot, snapshot, and notes
 playwright-cli show --annotate
 
@@ -230,6 +233,18 @@ playwright-cli close
 playwright-cli -s=msedge detach
 # Delete user data for the default session
 playwright-cli delete-data
+```
+
+## URLs with `&` on Windows
+
+On Windows, `cmd.exe` and PowerShell treat `&` as a command separator, so URLs with multiple query parameters get truncated before `playwright-cli` runs. Escape `&` with `^&` in `cmd.exe`, or use `--%` in PowerShell:
+
+```batch
+playwright-cli goto "https://example.com/?a=1^&b=2"
+```
+
+```powershell
+playwright-cli --% goto "https://example.com/?a=1&b=2"
 ```
 
 ## Snapshots

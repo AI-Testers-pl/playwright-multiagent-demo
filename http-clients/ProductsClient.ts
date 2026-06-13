@@ -1,6 +1,6 @@
 import { expect, type APIRequestContext } from '@playwright/test';
 import { APP_BASE_URL } from '../config/constants';
-import type { Product } from '../types/product';
+import type { Product, ProductInput } from '../types/product';
 
 const PRODUCTS_ENDPOINT = '/api/v1/products';
 
@@ -29,6 +29,27 @@ export class ProductsClient {
 
     expect(response.status()).toBe(200);
     return response.json();
+  }
+
+  async createProduct(product: ProductInput): Promise<Product> {
+    const response = await this.request.post(`${APP_BASE_URL}${PRODUCTS_ENDPOINT}`, {
+      data: product,
+      headers: {
+        ...this.authorizationHeaders(),
+        'Content-Type': 'application/json'
+      }
+    });
+
+    expect(response.status()).toBe(201);
+    return response.json();
+  }
+
+  async deleteProduct(productId: number) {
+    const response = await this.request.delete(`${APP_BASE_URL}${PRODUCTS_ENDPOINT}/${productId}`, {
+      headers: this.authorizationHeaders()
+    });
+
+    expect(response.status()).toBe(204);
   }
 
   private authorizationHeaders() {

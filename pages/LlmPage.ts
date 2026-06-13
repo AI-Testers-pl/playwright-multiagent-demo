@@ -28,4 +28,16 @@ export class LlmPage extends BasePage {
     await expect(this.chatCard).toBeVisible();
     await expect(this.toolsCard).toBeVisible();
   }
+
+  async openGenerate() {
+    await this.generateCard.click();
+  }
+
+  async openChat() {
+    await this.chatCard.click();
+  }
+
+  async openTools() {
+    await this.toolsCard.click();
+  }
 }

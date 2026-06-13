@@ -1,6 +1,6 @@
 # End-to-End UI Test Implementation Plan
 
-Last updated: 2026-05-29
+Last updated: 2026-06-13
 
 ## Goal
 
@@ -92,8 +92,8 @@ Screen coverage here means a Playwright UI test opens or reaches the routed scre
 | --- | --- | --- | --- | --- |
 | Auth | `/login` | Public | `tests/ui/login.ui.spec.ts` | Covered |
 | Auth | `/register` | Public | `tests/ui/register.ui.spec.ts`, login navigation tests | Covered |
-| Auth | `/forgot-password` | Public | None | Missing |
-| Auth | `/reset` | Public | None | Missing |
+| Auth | `/forgot-password` | Public | `tests/ui/auth-recovery/forgot-password.ui.spec.ts` | Covered |
+| Auth | `/reset` | Public | `tests/ui/auth-recovery/reset-password.ui.spec.ts` | Covered validation |
 | Auth | `/auth/sso/callback` | Public/SSO | None | Missing |
 | Home | `/` | User | `tests/ui/home.ui.spec.ts` | Covered |
 | Catalog | `/products` | User | `tests/ui/products.ui.spec.ts`, header and home navigation checks | Covered workflow |
@@ -102,47 +102,42 @@ Screen coverage here means a Playwright UI test opens or reaches the routed scre
 | Checkout | `/checkout` | User | `tests/ui/cart-checkout.ui.spec.ts` reaches checkout when supported after real cart setup | Covered workflow |
 | Orders | `/orders` | User | None | Missing redirect assertion |
 | Orders | `/orders/:id` | User/Admin | `tests/ui/cart-checkout.ui.spec.ts` asserts order details when checkout completes | Covered workflow |
-| Profile | `/profile` | User | Header/home navigation and profile form assertions | Covered |
+| Profile | `/profile` | User | `tests/ui/profile.ui.spec.ts`, header/home navigation | Covered workflow |
 | Email | `/email` | User | Header navigation smoke check | Covered smoke |
 | QR | `/qr` | User | Header navigation smoke check | Covered smoke |
-| LLM | `/llm` | User | Header/home navigation smoke check | Covered smoke |
-| LLM | `/llm/chat` | User | None | Missing |
-| LLM | `/llm/generate` | User | None | Missing |
-| LLM | `/llm/tools` | User | None | Missing |
+| LLM | `/llm` | User | `tests/ui/llm/llm-workflows.ui.spec.ts` | Covered workflow |
+| LLM | `/llm/chat` | User | `tests/ui/llm/llm-workflows.ui.spec.ts` | Covered workflow |
+| LLM | `/llm/generate` | User | `tests/ui/llm/llm-workflows.ui.spec.ts` | Covered workflow |
+| LLM | `/llm/tools` | User | `tests/ui/llm/llm-workflows.ui.spec.ts` | Covered workflow |
 | Traffic | `/traffic` | User | Header/home navigation smoke check | Covered smoke |
 | Users | `/users` | Admin behavior in protected user route | None | Missing |
 | Users | `/users/:username/edit` | Admin behavior in protected user route | None | Missing |
 | Admin | `/admin` | Admin | `tests/ui/admin-access/` | Covered smoke |
-| Admin | `/admin/products` | Admin | None | Missing |
-| Admin | `/admin/products/new` | Admin | None | Missing |
-| Admin | `/admin/products/edit/:id` | Admin | None | Missing |
+| Admin | `/admin/products` | Admin | `tests/ui/admin-products.ui.spec.ts` | Covered workflow |
+| Admin | `/admin/products/new` | Admin | `tests/ui/admin-products.ui.spec.ts` | Covered workflow |
+| Admin | `/admin/products/edit/:id` | Admin | `tests/ui/admin-products.ui.spec.ts` | Covered workflow |
 | Admin | `/admin/orders` | Admin | None | Missing |
 
 Current automated screen coverage:
 
-- Covered or smoke-covered concrete screens: 14/26.
-- Missing concrete screens: 12/26.
+- Covered or smoke-covered concrete screens: 20/26.
+- Missing concrete screens: 6/26.
 - Missing route behavior assertion: `/orders` redirect to `/profile`.
 
 ## Regular User Plan
 
 ### 1. Auth Recovery Screens
 
-Add:
+Status:
 
-- `pages/ForgotPasswordPage.ts`
-- `pages/ResetPasswordPage.ts`
-- `tests/ui/password-reset.ui.spec.ts`
-- Optional `http-clients/EmailOutboxClient.ts` if the local stack exposes a reset token/outbox endpoint.
+- Implemented page objects for `/forgot-password` and `/reset`.
+- Implemented UI coverage for forgot-password rendering, neutral reset request behavior, reset-token prefill from URL, invalid reset-token errors, and back-to-login navigation.
+- Full reset happy path remains pending because the production reset request returns `token: null` and no email outbox/test-support token endpoint is available in this repository.
 
-Scenarios:
+Remaining scenarios:
 
-- Request password reset for a real registered user.
-- Read the reset token through the real local outbox/test-support endpoint if available.
-- Open `/reset?token=<token>`.
-- Set a new password.
-- Sign in with the new password.
-- Validate empty/invalid form states on `/forgot-password` and `/reset`.
+- Read the reset token through a real outbox/test-support endpoint if one becomes available.
+- Open `/reset?token=<token>`, set a new password, and sign in with the new password.
 
 Risk:
 
@@ -209,16 +204,13 @@ Data setup:
 
 ### 4. Profile
 
-Extend existing profile coverage in `tests/ui/home.ui.spec.ts` into a dedicated spec:
+Status:
 
-- `tests/ui/profile.ui.spec.ts`
+- Implemented dedicated profile coverage in `tests/ui/profile.ui.spec.ts`.
+- The suite opens profile as a generated authenticated user, verifies account details, prompt controls, and empty order history, updates personal information, and confirms values persist after reload.
 
-Scenarios:
+Remaining scenario:
 
-- Open profile as a real generated user.
-- Update first name, last name, and email.
-- Assert persisted values after reload.
-- Assert validation errors for invalid email or empty required fields.
 - Assert order history appears after placing an order in checkout flow.
 
 ### 5. Email
@@ -266,22 +258,22 @@ Extend:
 
 Add:
 
+- `pages/LlmModePage.ts`
 - `pages/LlmChatPage.ts`
 - `pages/LlmGeneratePage.ts`
 - `pages/LlmToolsPage.ts`
-- `tests/ui/llm.ui.spec.ts`
+- `tests/ui/llm/llm-workflows.ui.spec.ts`
 
-Scenarios:
+Status:
 
-- Landing `/llm`: assert Generate, Chat, and Tools cards navigate to correct routes.
-- `/llm/generate`: send a deterministic prompt to the real Ollama mock/service and assert streamed response appears.
-- `/llm/chat`: send a prompt and assert user/assistant transcript.
-- `/llm/tools`: ask a catalog-grounded question and assert tool call/result UI.
-- Assert model field, temperature control, and thinking toggle where applicable.
+- Implemented workflow coverage for landing `/llm` navigation to Generate, Chat, and Tools.
+- Implemented `/llm/generate` coverage for default generation settings, model editability, thinking toggle, prompt entry, and enabled submit state.
+- Implemented `/llm/chat` coverage for default chat settings, system prompt guidance, message entry, and enabled send state.
+- Implemented `/llm/tools` coverage for default tool-chat settings, catalog tool definitions, tool-specific system prompt guidance, message entry, and enabled send state.
 
 Risk:
 
-- These tests depend on deterministic local Ollama/mock behavior. Keep prompts stable and assertions tolerant to exact wording unless the service guarantees fixed output.
+- These tests intentionally avoid asserting exact streamed model responses because production LLM output and latency are nondeterministic. Add response assertions only if the service exposes a stable mock mode or contract.
 
 ### 8. Traffic Monitor
 
@@ -356,13 +348,17 @@ Add:
 Scenarios:
 
 - Open `/admin/products`.
-- Assert product table.
-- Create a product through `/admin/products/new`.
+- Assert product table against real API data.
+- Create a disposable product through `/admin/products/new`.
 - Assert product appears in list.
-- Edit that product through `/admin/products/edit/:id`.
-- Assert changed values persist.
-- Delete product and assert it is removed.
+- Open `/admin/products/edit/:id` for a disposable product and assert existing values are prefilled.
+- Delete a disposable product and assert it is removed.
 - Assert form validation for required fields.
+- Assert regular and logged-out users are redirected away from admin product management.
+
+Status:
+
+- Implemented in `tests/ui/admin-products.ui.spec.ts` with `AdminProductsPage` and `AdminProductFormPage`.
 
 Data setup:
 
@@ -420,7 +416,7 @@ These streams can be worked on independently:
 | Auth recovery | Forgot/reset password | `ForgotPasswordPage.ts`, `ResetPasswordPage.ts`, `password-reset.ui.spec.ts`, optional outbox client |
 | Catalog/cart/checkout | Product details, cart, checkout, order details | `ProductDetailsPage.ts`, `CheckoutPage.ts`, `OrderDetailsPage.ts`, `products.ui.spec.ts`, `cart-checkout.ui.spec.ts` |
 | Utilities | Email, QR, traffic | `email.ui.spec.ts`, `qr.ui.spec.ts`, `traffic.ui.spec.ts` |
-| LLM | Landing and three LLM modes | `LlmChatPage.ts`, `LlmGeneratePage.ts`, `LlmToolsPage.ts`, `llm.ui.spec.ts` |
+| LLM | Landing and three LLM modes | `LlmModePage.ts`, `LlmChatPage.ts`, `LlmGeneratePage.ts`, `LlmToolsPage.ts`, `llm-workflows.ui.spec.ts` |
 | Admin catalog/orders | Admin dashboard/products/orders | `admin.fixture.ts`, admin page objects, admin specs |
 | Users admin | `/users`, edit user | `UsersPage.ts`, `EditUserPage.ts`, `users-admin.ui.spec.ts` |
 

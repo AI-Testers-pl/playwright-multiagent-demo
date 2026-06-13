@@ -9,3 +9,5 @@ export interface Product {
   createdAt: string;
   updatedAt: string;
 }
+
+export type ProductInput = Pick<Product, 'name' | 'description' | 'price' | 'stockQuantity' | 'category' | 'imageUrl'>;
