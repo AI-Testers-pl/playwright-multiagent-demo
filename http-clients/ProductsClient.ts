@@ -45,11 +45,17 @@ export class ProductsClient {
   }
 
   async deleteProduct(productId: number) {
+    const status = await this.tryDeleteProduct(productId);
+
+    expect(status).toBe(204);
+  }
+
+  async tryDeleteProduct(productId: number): Promise<number> {
     const response = await this.request.delete(`${APP_BASE_URL}${PRODUCTS_ENDPOINT}/${productId}`, {
       headers: this.authorizationHeaders()
     });
 
-    expect(response.status()).toBe(204);
+    return response.status();
   }
 
   private authorizationHeaders() {

@@ -25,7 +25,7 @@ export class AdminDashboardPage extends BasePage {
   }
 
   async gotoHome() {
-    await this.page.goto(this.homeUrl);
+    await this.page.goto(this.homeUrl, { waitUntil: 'domcontentloaded' });
   }
 
   async openFromNavigation() {

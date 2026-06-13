@@ -22,7 +22,7 @@ test.describe('Regular user admin access UI tests', () => {
     await adminDashboardPage.gotoHome();
 
     // when
-    await page.goto(`${adminDashboardPage.url}/products`);
+    await page.goto(`${adminDashboardPage.url}/products`, { waitUntil: 'domcontentloaded' });
 
     // then
     await expect(page).toHaveURL(adminDashboardPage.homeUrl);

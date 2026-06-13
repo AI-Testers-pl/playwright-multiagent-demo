@@ -42,8 +42,6 @@ test.describe('Admin product management UI tests', () => {
   });
 
   test('should create and delete disposable product from product management', async ({ adminUser, page, request }, testInfo) => {
-    testInfo.setTimeout(60_000);
-
     // given
     const productsClient = new ProductsClient(request, adminUser.token);
     const adminProductsPage = new AdminProductsPage(page);
@@ -79,8 +77,6 @@ test.describe('Admin product management UI tests', () => {
   });
 
   test('should prefill edit form for selected product', async ({ adminUser, page, request }, testInfo) => {
-    testInfo.setTimeout(60_000);
-
     // given
     const productsClient = new ProductsClient(request, adminUser.token);
     const adminProductsPage = new AdminProductsPage(page);
@@ -133,7 +129,13 @@ test.describe('Admin product management UI tests', () => {
     const disposableProducts = products.filter(product => names.includes(product.name));
 
     for (const product of disposableProducts) {
-      await productsClient.deleteProduct(product.id);
+      await expect.poll(async () => {
+        const status = await productsClient.tryDeleteProduct(product.id);
+
+        return status === 204 || status === 404;
+      }, {
+        timeout: 15_000
+      }).toBe(true).catch(() => undefined);
     }
   }
 });

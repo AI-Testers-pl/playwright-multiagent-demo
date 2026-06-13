@@ -41,7 +41,7 @@ export class AdminProductFormPage extends BasePage {
   }
 
   async gotoProduct(product: Product) {
-    await this.page.goto(this.urlForProduct(product));
+    await this.page.goto(this.urlForProduct(product), { waitUntil: 'domcontentloaded' });
   }
 
   async verifyLoaded(mode: ProductFormMode) {

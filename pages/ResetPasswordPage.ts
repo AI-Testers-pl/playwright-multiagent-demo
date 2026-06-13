@@ -42,7 +42,7 @@ export class ResetPasswordPage extends BasePage {
   }
 
   async gotoWithToken(token: string) {
-    await this.page.goto(this.getUrlWithToken(token));
+    await this.page.goto(this.getUrlWithToken(token), { waitUntil: 'domcontentloaded' });
   }
 
   async verifyLoaded() {

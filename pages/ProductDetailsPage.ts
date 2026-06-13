@@ -43,7 +43,7 @@ export class ProductDetailsPage extends BasePage {
   }
 
   async gotoProduct(product: Product) {
-    await this.page.goto(this.urlFor(product));
+    await this.page.goto(this.urlFor(product), { waitUntil: 'domcontentloaded' });
   }
 
   async verifyLoaded(product: Product) {

@@ -19,7 +19,7 @@ test.describe('Logged-out admin access UI tests', () => {
     const adminDashboardPage = new AdminDashboardPage(page);
 
     // when
-    await page.goto(`${adminDashboardPage.url}/products`);
+    await page.goto(`${adminDashboardPage.url}/products`, { waitUntil: 'domcontentloaded' });
 
     // then
     await expect(page).toHaveURL(loginPage.url);
