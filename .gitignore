@@ -1,0 +1,19 @@
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+.playwright-cli/
+.playwright-mcp/
+allure-report/
+allure-results/
+logs/
+
+artifacts
+
+.DS_Store
+
+.idea
+.env
