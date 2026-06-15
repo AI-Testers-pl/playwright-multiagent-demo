@@ -28,6 +28,7 @@ General rules for all subagents:
 - Do not add Polish text to source files, tests, prompts, reports, or comments.
 - Do not use test.only, test.skip, ts-ignore, ts-nocheck, or any.
 - Keep tests pointed at the configured APP_BASE_URL, not hardcoded localhost.
+- Run only the focused tests for your assigned workflow slice. Do not run the complete UI suite, the full test suite, or `npm run test:ui`; the supervising agent owns that final verification.
 - Return only: changed files, tests run, result, risks, and any shared files touched.
 
 Agent 1: LLM workflow
@@ -69,6 +70,6 @@ After spawning:
 - Keep tests readable and focused on behavior, not setup mechanics.
 - Resolve integration conflicts yourself.
 - Run focused production validation with APP_BASE_URL=https://aitesters.byst.re.
-- If time allows, run the full UI suite against production.
+- Run the full UI suite against production as the final verification step.
 - Summarize final changed files, test results, review fixes, risks
 ```
