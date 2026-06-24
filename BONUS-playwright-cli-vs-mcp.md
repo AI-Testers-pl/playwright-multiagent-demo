@@ -105,8 +105,13 @@ flowchart TD
 
 ## Źródła i materiały
 
-Główne źródła do tego porównania to artykuł Awesome Testing o Playwright CLI, skillach i izolowanej pracy agentów: <https://www.awesome-testing.com/2026/03/playwright-cli-skills-and-isolated-agentic-testing>, repozytorium Microsoft Playwright CLI: <https://github.com/microsoft/playwright-cli>, repozytorium Microsoft Playwright MCP: <https://github.com/microsoft/playwright-mcp> oraz oficjalna dokumentacja Playwright MCP: <https://playwright.dev/docs/getting-started-mcp>.
-
-Jako szerszy kontekst techniczny warto też znać dokumentację Playwrighta: <https://playwright.dev/docs/intro>, dokumentację lokatorów: <https://playwright.dev/docs/locators>, opis generatora testów: <https://playwright.dev/docs/codegen> oraz stronę Model Context Protocol: <https://modelcontextprotocol.io/>.
+- Awesome Testing, artykuł o Playwright CLI, skillach i izolowanej pracy agentów: <https://www.awesome-testing.com/2026/03/playwright-cli-skills-and-isolated-agentic-testing>
+- Microsoft Playwright CLI: <https://github.com/microsoft/playwright-cli>
+- Microsoft Playwright MCP: <https://github.com/microsoft/playwright-mcp>
+- Dokumentacja Playwright MCP: <https://playwright.dev/docs/getting-started-mcp>
+- Dokumentacja Playwrighta: <https://playwright.dev/docs/intro>
+- Playwright Locators: <https://playwright.dev/docs/locators>
+- Playwright Test Generator: <https://playwright.dev/docs/codegen>
+- Model Context Protocol: <https://modelcontextprotocol.io/>
 
 Stan na: 2026-06-24.
