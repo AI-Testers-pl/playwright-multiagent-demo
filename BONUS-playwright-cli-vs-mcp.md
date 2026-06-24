@@ -1,11 +1,8 @@
 # Bonus: Playwright CLI vs Playwright MCP
 
-Ten bonus porównuje dwa sposoby używania Playwrighta w pracy z agentami AI:
+Ten bonus porównuje dwa sposoby używania Playwrighta w pracy z agentami AI: **Playwright CLI** z repozytorium `microsoft/playwright-cli` oraz **Playwright MCP** z repozytorium `microsoft/playwright-mcp`.
 
-- **Playwright CLI** z repozytorium `microsoft/playwright-cli`
-- **Playwright MCP** z repozytorium `microsoft/playwright-mcp`
-
-Oba narzędzia służą do sterowania przeglądarką przez agenta, ale są zoptymalizowane pod inne style pracy. Najkrótsza praktyczna odpowiedź brzmi: **Playwright CLI lepiej pasuje do agentów kodujących, a Playwright MCP lepiej pasuje do klientów MCP i interaktywnego eksplorowania strony z poziomu narzędzi takich jak VS Code, Cursor, Windsurf czy Claude Desktop.**
+Oba narzędzia rozwiązują podobny problem: pozwalają agentowi sterować przeglądarką. Różnią się jednak stylem pracy. W praktyce Playwright CLI lepiej pasuje do agenta kodującego, który działa w repozytorium i korzysta z terminala, a Playwright MCP lepiej pasuje do klientów MCP i interaktywnego eksplorowania strony z poziomu narzędzi takich jak VS Code, Cursor, Windsurf czy Claude Desktop.
 
 ## Najpierw ważne rozróżnienie
 
@@ -17,7 +14,7 @@ npx playwright test
 
 `npx playwright test` to runner testów Playwrighta. Uruchamia testy, raportuje wyniki i jest podstawowym narzędziem w projekcie testowym.
 
-`playwright-cli` z `microsoft/playwright-cli` to osobny interfejs do sterowania przeglądarką z terminala. Agent może wykonywać polecenia typu:
+`playwright-cli` z `microsoft/playwright-cli` jest czymś innym. To osobny interfejs do sterowania przeglądarką z terminala. Agent może dzięki niemu otworzyć stronę, pobrać snapshot, kliknąć element, wpisać tekst, zrobić screenshot albo zamknąć sesję:
 
 ```bash
 playwright-cli open https://example.com
@@ -28,22 +25,15 @@ playwright-cli screenshot
 playwright-cli close
 ```
 
-To jest warstwa do eksploracji, debugowania i generowania wiedzy o stronie, a nie zamiennik dla testów w `@playwright/test`.
+Warto więc myśleć o nim jako o warstwie do eksploracji, debugowania i zbierania wiedzy o stronie. Nie zastępuje testów w `@playwright/test`; raczej pomaga agentowi lepiej zrozumieć aplikację przed napisaniem testu.
 
 ## Czym jest Playwright CLI
 
-Playwright CLI to terminalowy interfejs do Playwrighta zaprojektowany z myślą o agentach AI. Agent nie musi dostawać dużego zestawu narzędzi MCP ani pełnej struktury strony w kontekście modelu. Wykonuje krótkie komendy, a narzędzie zapisuje bogatszy stan lokalnie, np. snapshoty, zrzuty ekranu, ślady, wideo i dane sesji.
+Playwright CLI to terminalowy interfejs do Playwrighta zaprojektowany z myślą o agentach AI. Jego główna zaleta jest bardzo prosta: agent nie musi dostawać dużego zestawu narzędzi MCP ani pełnej struktury strony w kontekście modelu. Może wykonać krótką komendę, dostać zwięzły wynik i przejść dalej.
 
-Najważniejsze cechy:
+To dobrze pasuje do pracy agenta kodującego. Taki agent i tak działa w terminalu, czyta pliki, edytuje kod i uruchamia testy. Jeśli w tym samym stylu może też zbadać aplikację w przeglądarce, workflow jest spójny. Playwright CLI potrafi utrzymywać osobne sesje przez `-s=nazwa-sesji`, zapisywać i odtwarzać stan przeglądarki, robić snapshoty, screenshoty, trace, video, obsługiwać storage i uruchamiać własny kod Playwrighta przez `run-code`.
 
-- działa przez terminal, czyli przez mechanizm, który agenci kodujący już dobrze obsługują;
-- zwraca zwięzłe wyniki i stabilne referencje elementów, np. `e15`;
-- pozwala utrzymywać osobne sesje przeglądarki przez `-s=nazwa-sesji`;
-- potrafi zapisywać i odtwarzać stan przeglądarki;
-- wspiera akcje użytkownika, snapshoty, screenshoty, trace, video, sieć, storage i uruchamianie własnego kodu Playwrighta przez `run-code`;
-- dobrze łączy się ze Skillami, czyli instrukcjami opisującymi agentowi, jak używać CLI w danym workflow.
-
-Przykład izolowanej sesji:
+Przykład izolowanej sesji może wyglądać tak:
 
 ```bash
 playwright-cli -s=auth open https://app.example.com/login
@@ -55,21 +45,15 @@ playwright-cli -s=auth state-save auth.json
 playwright-cli -s=auth close
 ```
 
-W projekcie takim jak ten CLI jest przydatne szczególnie przed implementacją testu: agent może wejść na stronę, sprawdzić dostępne role i teksty, zobaczyć realny flow, a potem dopiero napisać Page Object i test Playwrighta.
+W projekcie testowym takie podejście jest szczególnie przydatne przed implementacją testu. Agent może wejść na stronę, sprawdzić dostępne role, teksty i stany po kliknięciach, a dopiero potem napisać Page Object i test Playwrighta.
 
 ## Czym jest Playwright MCP
 
-Playwright MCP to serwer Model Context Protocol. Udostępnia agentowi narzędzia do automatyzacji przeglądarki przez standard MCP. Agent komunikuje się z serwerem MCP, a serwer wykonuje akcje w Playwrightcie i zwraca strukturalne snapshoty dostępności strony.
+Playwright MCP działa inaczej. To serwer Model Context Protocol, który udostępnia agentowi narzędzia do automatyzacji przeglądarki przez standard MCP. Agent nie steruje przeglądarką bezpośrednio komendami terminalowymi, tylko komunikuje się z serwerem MCP, a serwer wykonuje akcje w Playwrightcie i zwraca strukturalne informacje o stronie.
 
-Najważniejsze cechy:
+Ten model dobrze pasuje do środowisk, które już obsługują MCP. Jeśli ktoś pracuje w edytorze albo kliencie AI z natywną integracją MCP, Playwright MCP można potraktować jako kolejne narzędzie podłączone do tego ekosystemu. Dużą zaletą jest też to, że interakcje opierają się na strukturalnych snapshotach dostępności, więc nie trzeba polegać na modelach wizyjnych, żeby agent rozumiał, co znajduje się na stronie.
 
-- działa w klientach obsługujących MCP, np. VS Code, Cursor, Windsurf, Claude Desktop i innych;
-- daje agentowi narzędzia do nawigacji, klikania, wpisywania tekstu, obserwowania strony i generowania testów;
-- opiera interakcje na strukturalnych snapshotach dostępności, bez konieczności używania modeli wizyjnych;
-- jest wygodne, gdy środowisko agenta ma natywną integrację MCP i użytkownik chce szybko podłączyć przeglądarkę jako narzędzie;
-- standaryzuje sposób komunikacji między klientem AI a automatyzacją przeglądarki.
-
-MCP jest więc bardzo dobrym wyborem, gdy pracujemy w narzędziu, które już ma sensowną obsługę MCP i chcemy dodać przeglądarkę jako kolejne narzędzie agenta.
+MCP jest więc wygodne wtedy, gdy workflow jest zbudowany wokół klientów MCP i chcemy standardowego sposobu komunikacji między klientem AI a automatyzacją przeglądarki.
 
 ## Porównanie praktyczne
 
@@ -84,30 +68,13 @@ MCP jest więc bardzo dobrym wyborem, gdy pracujemy w narzędziu, które już ma
 | Artefakty | Snapshoty, screenshoty, trace, video, storage state w lokalnym workflow | Snapshoty i akcje dostępne przez protokół MCP |
 | Debugowanie w repo | Łatwe do połączenia z komendami `npm`, testami i plikami projektu | Dobre do eksploracji, ale bardziej zależne od integracji narzędzia |
 
-## Kiedy wybrać Playwright CLI
+## Kiedy wybrać które narzędzie
 
-Wybierz Playwright CLI, gdy agent ma pracować jak programista w repozytorium:
+Playwright CLI wybrałbym wtedy, gdy agent ma pracować jak programista w repozytorium: eksplorować aplikację przed napisaniem testu, generować albo poprawiać Page Objecty, uruchamiać `npm run test:ui`, zapisywać screenshoty i trace oraz pracować na izolowanych sesjach, np. osobno dla administratora, zwykłego użytkownika i osoby niezalogowanej.
 
-- eksploruje aplikację przed napisaniem testu;
-- generuje albo poprawia Page Objecty;
-- uruchamia `npm run test:ui`;
-- zapisuje screenshoty, trace lub snapshoty jako lokalne artefakty;
-- potrzebuje izolowanych sesji, np. osobno admin, zwykły użytkownik i niezalogowany użytkownik;
-- ma pracować szybko i nie marnować kontekstu modelu na duże struktury strony.
+W takim scenariuszu ważna jest prostota. Agent ma terminal, pliki i testy w jednym miejscu. Nie trzeba dokładać osobnego serwera MCP ani pamiętać o jego cyklu życia. Dla wielu zadań testowych to po prostu mniej ruchomych części.
 
-W tym repozytorium to jest domyślny kierunek dla UI testów: najpierw eksploracja strony, potem implementacja testu zgodnie z Page Object Model, selektorami `data-testid` tam, gdzie są dostępne, i strukturą given / when / then.
-
-## Kiedy wybrać Playwright MCP
-
-Wybierz Playwright MCP, gdy:
-
-- pracujesz w kliencie, który dobrze obsługuje MCP;
-- chcesz szybko dać agentowi narzędzie do przeglądarki bez budowania terminalowego workflow;
-- zależy Ci na standardowym protokole integracji narzędzi;
-- wykonujesz eksplorację strony w bardziej interaktywnym trybie;
-- nie potrzebujesz tak ścisłej integracji z lokalnymi komendami repozytorium.
-
-MCP może być wygodniejsze na starcie, szczególnie dla osób, które już mają skonfigurowany edytor z MCP i chcą po prostu dodać przeglądarkę jako narzędzie.
+Playwright MCP wybrałbym wtedy, gdy zespół pracuje już w kliencie dobrze obsługującym MCP albo gdy organizacja chce mieć bardziej standardowy sposób podłączania narzędzi do agenta. MCP jest też naturalniejsze, gdy eksploracja strony ma być bardziej interaktywna i wykonywana z poziomu środowiska, które traktuje narzędzia MCP jako podstawowy mechanizm integracji.
 
 ## Jak ja o tym myślę
 
@@ -138,40 +105,8 @@ flowchart TD
 
 ## Źródła i materiały
 
-### Źródła podstawowe
+Główne źródła do tego porównania to artykuł Awesome Testing o Playwright CLI, skillach i izolowanej pracy agentów: <https://www.awesome-testing.com/2026/03/playwright-cli-skills-and-isolated-agentic-testing>, repozytorium Microsoft Playwright CLI: <https://github.com/microsoft/playwright-cli>, repozytorium Microsoft Playwright MCP: <https://github.com/microsoft/playwright-mcp> oraz oficjalna dokumentacja Playwright MCP: <https://playwright.dev/docs/getting-started-mcp>.
 
-- **Artykuł o Playwright CLI, skillach i izolowanej pracy agentów**  
-  <https://www.awesome-testing.com/2026/03/playwright-cli-skills-and-isolated-agentic-testing>  
-  Dobry punkt startowy do zrozumienia, dlaczego `playwright-cli` jest przydatny w pracy agentów kodujących. Szczególnie ważne są fragmenty o izolowanych sesjach, małym koszcie kontekstu i używaniu skillów jako instrukcji operacyjnych dla agenta.
-
-- **Repozytorium Microsoft Playwright CLI**  
-  <https://github.com/microsoft/playwright-cli>  
-  Główne źródło dla komend CLI, przykładów użycia i aktualnego zakresu funkcji. Warto sprawdzać README, ponieważ narzędzie rozwija się niezależnie od klasycznego runnera Playwrighta.
-
-- **Repozytorium Microsoft Playwright MCP**  
-  <https://github.com/microsoft/playwright-mcp>  
-  Główne źródło dla serwera MCP, konfiguracji i listy narzędzi udostępnianych agentom przez Model Context Protocol.
-
-- **Dokumentacja Playwright MCP**  
-  <https://playwright.dev/docs/getting-started-mcp>  
-  Oficjalny opis uruchamiania Playwright MCP i podłączania go do klientów AI obsługujących MCP.
-
-### Kontekst techniczny
-
-- **Dokumentacja Playwrighta**  
-  <https://playwright.dev/docs/intro>  
-  Bazowa dokumentacja frameworka: test runner, lokatory, asercje, konfiguracja i raporty.
-
-- **Playwright Locators**  
-  <https://playwright.dev/docs/locators>  
-  Przydatne tło do rozmowy o stabilnych selektorach. W tym repozytorium nadal preferujemy `data-testid`, ale warto znać też role, teksty i etykiety.
-
-- **Playwright Test Generator**  
-  <https://playwright.dev/docs/codegen>  
-  Klasyczne narzędzie Playwrighta do generowania testów. Warto porównać je z podejściem agentowym: codegen nagrywa akcje, a agent powinien dodatkowo projektować Page Objecty, dane testowe i asercje.
-
-- **Model Context Protocol**  
-  <https://modelcontextprotocol.io/>  
-  Ogólny kontekst dla MCP: czym jest protokół, jak klienci AI komunikują się z narzędziami i dlaczego Playwright MCP pasuje do tego ekosystemu.
+Jako szerszy kontekst techniczny warto też znać dokumentację Playwrighta: <https://playwright.dev/docs/intro>, dokumentację lokatorów: <https://playwright.dev/docs/locators>, opis generatora testów: <https://playwright.dev/docs/codegen> oraz stronę Model Context Protocol: <https://modelcontextprotocol.io/>.
 
 Stan na: 2026-06-24.
