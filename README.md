@@ -6,15 +6,17 @@ To repozytorium pakuje demo kursowe jako porownanie w stylu monorepo:
 - `wynik/` to gotowy rezultat po zastosowaniu prompta.
 - `PROMPT.md` to prompt implementacyjny w glownym katalogu repozytorium, ktory opisuje przejscie od `main/` do `wynik/`.
 - `BONUS-playwright-cli-vs-mcp.md` to bonusowa notatka po polsku porownujaca Playwright CLI i Playwright MCP w workflow testow agentowych.
+- `BONUS-cache-w-agentach-kodujacych.md` to bonusowa notatka po polsku o projektowaniu kontekstu, cache'u i subagentow w pracy z agentami kodujacymi.
 - `slides/` zawiera deck HTML skopiowany z `~/IdeaProjects/empty2/multiagent-html-slides`.
 
 Sugerowana kolejnosc czytania:
 
 1. Otworz `PROMPT.md`.
 2. Przeczytaj `BONUS-playwright-cli-vs-mcp.md`, jezeli chcesz dodatkowy kontekst CLI vs MCP.
-3. Obejrzyj punkt startowy w `main/`.
-4. Porownaj go z gotowa implementacja w `wynik/`.
-5. Uzyj `slides/index.html` albo `slides/multiagent-slides.pdf` podczas prezentacji workflow.
+3. Przeczytaj `BONUS-cache-w-agentach-kodujacych.md`, jezeli chcesz dodatkowy kontekst kosztow, cache'u i subagentow.
+4. Obejrzyj punkt startowy w `main/`.
+5. Porownaj go z gotowa implementacja w `wynik/`.
+6. Uzyj `slides/index.html` albo `slides/multiagent-slides.pdf` podczas prezentacji workflow.
 
 ## Jak dziala demo
 
