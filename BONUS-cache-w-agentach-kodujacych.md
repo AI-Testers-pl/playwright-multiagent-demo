@@ -8,6 +8,28 @@ Najważniejsza praktyczna zasada:
 
 Ten bonus nie jest opisem teorii prompt cachingu. To playbook do pracy z Codexem, Claude Code, własnym agentem przez API albo multi-agentowym workflowem w repozytorium.
 
+```mermaid
+flowchart LR
+    A["Start sesji"] --> B["Ustal model, effort, narzędzia i katalog"]
+    B --> C["Stabilny prefiks"]
+    C --> C1["Instrukcje systemowe"]
+    C --> C2["Definicje narzędzi"]
+    C --> C3["AGENTS.md i reguły repo"]
+    C --> C4["Stały styl pracy"]
+
+    C --> D["Zmienne dane na końcu"]
+    D --> D1["Nowa prośba"]
+    D --> D2["Wyniki testów"]
+    D --> D3["Logi i obserwacje"]
+
+    D --> E{"Kolejna tura"}
+    E -->|Prefiks bez zmian| F["Cache hit: taniej i szybciej"]
+    E -->|Model, effort lub toolset zmieniony| G["Cache miss: płacisz za prefiks od nowa"]
+
+    G --> H["Zrób handoff i traktuj to jak nowy etap"]
+    F --> I["Kontynuuj małymi krokami"]
+```
+
 ## Co robić na początku sesji
 
 Najdroższy błąd to zacząć chaotycznie, a potem w połowie długiej sesji zmieniać model, effort, narzędzia i zakres zadania. Claude Code docs pokazują to bardzo konkretnie: model i effort są częścią cache key, narzędzia mogą siedzieć w warstwie system promptu, a kompakcja zmienia warstwę rozmowy. OpenAI prompt caching docs mówią tę samą rzecz na niższym poziomie: cache działa na dokładnym prefiksie.
