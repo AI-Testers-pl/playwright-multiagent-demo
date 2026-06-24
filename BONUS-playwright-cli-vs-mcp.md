@@ -138,11 +138,58 @@ npm run test:ui
 
 To pokazuje, gdzie Playwright CLI ma największy sens: nie jako osobny gadżet, tylko jako część kompletnego cyklu pracy agenta testowego.
 
-## Źródła
+## Źródła i materiały
 
-- Awesome Testing: <https://www.awesome-testing.com/2026/03/playwright-cli-skills-and-isolated-agentic-testing>
-- Microsoft Playwright CLI: <https://github.com/microsoft/playwright-cli>
-- Microsoft Playwright MCP: <https://github.com/microsoft/playwright-mcp>
-- Dokumentacja Playwright MCP: <https://playwright.dev/docs/getting-started-mcp>
+### Źródła podstawowe
+
+- **Artykuł o Playwright CLI, skillach i izolowanej pracy agentów**  
+  <https://www.awesome-testing.com/2026/03/playwright-cli-skills-and-isolated-agentic-testing>  
+  Dobry punkt startowy do zrozumienia, dlaczego `playwright-cli` jest przydatny w pracy agentów kodujących. Szczególnie ważne są fragmenty o izolowanych sesjach, małym koszcie kontekstu i używaniu skillów jako instrukcji operacyjnych dla agenta.
+
+- **Repozytorium Microsoft Playwright CLI**  
+  <https://github.com/microsoft/playwright-cli>  
+  Główne źródło dla komend CLI, przykładów użycia i aktualnego zakresu funkcji. Warto sprawdzać README, ponieważ narzędzie rozwija się niezależnie od klasycznego runnera Playwrighta.
+
+- **Repozytorium Microsoft Playwright MCP**  
+  <https://github.com/microsoft/playwright-mcp>  
+  Główne źródło dla serwera MCP, konfiguracji i listy narzędzi udostępnianych agentom przez Model Context Protocol.
+
+- **Dokumentacja Playwright MCP**  
+  <https://playwright.dev/docs/getting-started-mcp>  
+  Oficjalny opis uruchamiania Playwright MCP i podłączania go do klientów AI obsługujących MCP.
+
+### Kontekst techniczny
+
+- **Dokumentacja Playwrighta**  
+  <https://playwright.dev/docs/intro>  
+  Bazowa dokumentacja frameworka: test runner, lokatory, asercje, konfiguracja i raporty.
+
+- **Playwright Locators**  
+  <https://playwright.dev/docs/locators>  
+  Przydatne tło do rozmowy o stabilnych selektorach. W tym repozytorium nadal preferujemy `data-testid`, ale warto znać też role, teksty i etykiety.
+
+- **Playwright Test Generator**  
+  <https://playwright.dev/docs/codegen>  
+  Klasyczne narzędzie Playwrighta do generowania testów. Warto porównać je z podejściem agentowym: codegen nagrywa akcje, a agent powinien dodatkowo projektować Page Objecty, dane testowe i asercje.
+
+- **Model Context Protocol**  
+  <https://modelcontextprotocol.io/>  
+  Ogólny kontekst dla MCP: czym jest protokół, jak klienci AI komunikują się z narzędziami i dlaczego Playwright MCP pasuje do tego ekosystemu.
+
+### Materiały do pracy z tym repozytorium
+
+- `PROMPT.md` - główny prompt pokazujący podział pracy na agentów.
+- `main/` - punkt startowy dla kursantów.
+- `wynik/` - gotowy rezultat po pracy agentów.
+- `main/e2e-ui-test-implementation-plan.md` i `wynik/e2e-ui-test-implementation-plan.md` - przykłady wysokopoziomowego planu pokrycia UI testami.
+- `main/pages/` i `wynik/pages/` - Page Objecty używane w testach.
+- `main/tests/ui/` i `wynik/tests/ui/` - przykłady testów UI zgodnych z konwencją kursu.
+
+### Jak korzystać z tych materiałów
+
+1. Najpierw przeczytaj artykuł Awesome Testing i ten bonus.
+2. Potem sprawdź README w `microsoft/playwright-cli` i `microsoft/playwright-mcp`.
+3. Następnie porównaj `main/` z `wynik/`, zwracając uwagę na to, gdzie agent najpierw eksploruje aplikację, a dopiero potem pisze testy.
+4. Na końcu wróć do dokumentacji Playwrighta o lokatorach i codegen, żeby zobaczyć różnicę między klasycznym generowaniem testu a agentowym workflow.
 
 Stan na: 2026-06-24.
