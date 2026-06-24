@@ -24,27 +24,6 @@ Na początku sesji ustaw:
 
 Potem nie ruszaj tych rzeczy bez powodu.
 
-Dobre otwarcie zadania:
-
-```text
-Cel: dodaj test UI Playwright dla ścieżki checkout happy path.
-
-Stały kontekst:
-- użyj AGENTS.md;
-- trzymaj się Page Object Model;
-- preferuj data-testid;
-- test ma mieć układ given / when / then;
-- nowy test uruchom pierwszy, potem npm run test:ui.
-
-Najpierw:
-1. przejrzyj tylko istotne pliki;
-2. zbadaj stronę Playwright CLI;
-3. zwróć krótki plan;
-4. nie edytuj plików przed planem.
-```
-
-To jest dobre nie tylko dlatego, że jest jasne. Jest dobre również cache'owo: stabilne reguły pojawiają się wcześnie, a zmienne wyniki eksploracji dojdą później.
-
 ## Co trzymać w stałych plikach
 
 Nie powtarzaj w każdym promptcie tych samych instrukcji. Jeżeli reguła ma obowiązywać w repozytorium, przenieś ją do stałego miejsca.
