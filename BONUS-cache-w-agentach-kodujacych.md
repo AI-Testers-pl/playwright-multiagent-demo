@@ -1,42 +1,39 @@
 # Bonus: jak korzystać z cache'a w agentach kodujących
 
-Prompt caching to mechanizm, w którym provider ponownie wykorzystuje wcześniej przetworzony początek promptu. Agent kodujący przy każdej turze wysyła dużo kontekstu: instrukcje systemowe, definicje narzędzi, reguły repozytorium, historię rozmowy, wyniki tooli i nową prośbę. Cache sprawia, że niezmieniony prefiks nie musi być liczony od zera w każdej turze. Stosuje się go po to, żeby długie sesje agentowe były tańsze i szybsze, ale efekt zależy od tego, czy pracujemy w sposób przyjazny dla cache'a.
+Prompt caching jest prosty w teorii: provider potrafi ponownie wykorzystać wcześniej przetworzony początek promptu. W agentach kodujących ma to duże znaczenie, bo każda kolejna tura niesie ze sobą sporo kontekstu: instrukcje systemowe, definicje narzędzi, reguły repozytorium, historię rozmowy, wyniki komend i nową prośbę. Jeżeli początek tego pakietu pozostaje stabilny, kolejne kroki mogą być tańsze i szybsze. Jeżeli w połowie pracy zmieniamy model, effort, narzędzia albo sposób składania promptu, bardzo łatwo wrócić do płacenia za ten sam kontekst od zera.
 
-Najważniejsza praktyczna zasada:
+Najkrótsza zasada brzmi:
 
-> Wybierz konfigurację na początku, trzymaj stabilne instrukcje wysoko w kontekście, a zmienny szum doklejaj na końcu.
+> Ustal konfigurację na początku, trzymaj stałe instrukcje wysoko w kontekście, a zmienne wyniki pracy doklejaj na końcu.
 
-Ten bonus nie jest opisem teorii prompt cachingu. To playbook do pracy z Codexem, Claude Code, własnym agentem przez API albo multi-agentowym workflowem w repozytorium.
+W praktyce cache nie jest przełącznikiem, tylko stylem prowadzenia sesji. Dobry agentowy workflow zaczyna się spokojnie: wybierasz model, ustawiasz effort, upewniasz się, że potrzebne MCP i narzędzia są dostępne, a potem dopiero dajesz agentowi zadanie. Najgorszy wariant to zacząć od chaotycznej eksploracji, po kilku turach podłączyć dodatkowy serwer MCP, potem zmienić model, a na końcu dziwić się, że długa sesja zaczęła kosztować więcej niż powinna.
 
-## Co robić na początku sesji
+## Zacznij od stabilnej konfiguracji
 
-Najdroższy błąd to zacząć chaotycznie, a potem w połowie długiej sesji zmieniać model, effort, narzędzia i zakres zadania. Claude Code docs pokazują to bardzo konkretnie: model i effort są częścią cache key, narzędzia mogą siedzieć w warstwie system promptu, a kompakcja zmienia warstwę rozmowy. OpenAI prompt caching docs mówią tę samą rzecz na niższym poziomie: cache działa na dokładnym prefiksie.
+Pierwsza część sesji powinna przypominać przygotowanie stanowiska pracy. Agent ma wiedzieć, gdzie jest, jakimi narzędziami pracuje i po czym poznaje, że zadanie jest skończone. To jest ten moment, w którym warto jasno powiedzieć: pracujemy w tym repozytorium, tym modelem, z takim effortem, z takim zestawem narzędzi i według takich reguł.
 
-Na początku sesji ustaw:
+Dobry prompt startowy nie musi być długi. Ważne, żeby zawierał stabilne elementy:
 
-- model;
-- reasoning / effort;
-- katalog roboczy;
-- zestaw narzędzi i MCP;
-- tryb pracy, np. plan-first albo implement-first;
-- reguły repozytorium;
-- kryterium zakończenia.
+```text
+Cel: dodaj test UI Playwright dla ścieżki checkout happy path.
 
-Potem nie ruszaj tych rzeczy bez powodu.
+Stały kontekst:
+- użyj AGENTS.md;
+- trzymaj się Page Object Model;
+- preferuj data-testid;
+- test ma mieć układ given / when / then;
+- nowy test uruchom pierwszy, potem npm run test:ui.
 
-## Co trzymać w stałych plikach
+Najpierw zwróć krótki plan. Nie edytuj plików przed planem.
+```
 
-Nie powtarzaj w każdym promptcie tych samych instrukcji. Jeżeli reguła ma obowiązywać w repozytorium, przenieś ją do stałego miejsca.
+To działa z dwóch powodów. Po pierwsze, agent dostaje jasne granice zadania. Po drugie, najważniejsze reguły pojawiają się wcześnie i mogą zostać stabilną częścią prefiksu. Później do rozmowy dochodzą już rzeczy zmienne: wynik eksploracji, błędy testów, fragmenty logów, decyzje po drodze.
 
-Dobre miejsca:
+## Przenieś powtarzalne zasady do plików
 
-- `AGENTS.md` dla zasad repozytorium;
-- `README.md` dla orientacji projektowej;
-- `e2e-ui-test-implementation-plan.md` dla mapy pokrycia testów;
-- skille / playbooki dla powtarzalnych workflowów;
-- szablony promptów dla typowych zadań.
+Jeżeli co drugą sesję wklejasz agentowi ten sam zestaw instrukcji, to nie masz procesu, tylko rytuał kopiuj-wklej. Lepsze miejsce na powtarzalne reguły to `AGENTS.md`, README, plan testów albo osobny playbook.
 
-Przykład reguł, które dobrze pasują do `AGENTS.md`:
+W tym repozytorium dobrym przykładem są reguły UI testów. Nie powinny żyć wyłącznie w promptach. Lepiej zapisać je raz:
 
 ```markdown
 ## UI tests
@@ -50,41 +47,74 @@ Przykład reguł, które dobrze pasują do `AGENTS.md`:
 - Update e2e-ui-test-implementation-plan.md after adding a new suite.
 ```
 
-To ogranicza liczbę ręcznych instrukcji w promptach i pomaga agentowi zaczynać kolejne zadania z podobnym, stabilnym kontekstem.
+Taki zapis pomaga jakościowo i organizacyjnie. Agent szybciej łapie lokalny styl pracy, a Ty nie musisz za każdym razem budować całego kontekstu ręcznie. Z perspektywy cache'a to też jest zdrowsze: stałe instrukcje mają stałe miejsce, zamiast pojawiać się raz na początku, raz po logach, a raz między dwoma stack trace'ami.
 
-## Czego nie robić w środku długiej sesji
+## Nie zmieniaj środowiska w środku sprintu
 
-Te akcje zwykle są kosztownymi granicami. Czasem warto je wykonać, ale nie traktuj ich jako neutralnych.
+Claude Code docs bardzo konkretnie pokazują, że model i effort są częścią cache key, a zmiany w narzędziach, MCP, pluginach czy kompakcji potrafią przesunąć sesję na nową granicę cache'a. OpenAI opisuje ten sam mechanizm niżej, na poziomie prefiksu: cache działa wtedy, gdy początek promptu się zgadza.
 
-| Akcja | Dlaczego boli | Lepszy moment |
-| --- | --- | --- |
-| Zmiana modelu | Każdy model ma osobny cache | początek sesji albo nowy etap |
-| Zmiana effort / reasoning | Effort może być częścią cache key | początek sesji |
-| Podłączenie MCP w trakcie pracy | Definicje tooli mogą zmienić prefiks | przed rozpoczęciem zadania |
-| Włączenie/wyłączenie pluginu z MCP | Może zmienić zestaw narzędzi | nowa sesja albo naturalna przerwa |
-| Deny całego toola | Zmienia to, jakie narzędzia widzi model | konfiguracja przed zadaniem |
-| `/compact` w środku debugowania | Zastępuje historię streszczeniem | po zakończonym etapie |
-| Upgrade narzędzia kodującego | Może zmienić system prompt i tool definitions | po zakończeniu pracy |
-| Start w innym worktree/katalogu | Katalog roboczy bywa częścią kontekstu | świadoma nowa sesja |
+Dlatego w długiej sesji traktuj poniższe akcje jak zmianę biegu, a nie jak neutralny szczegół:
 
-Praktyczna zasada: jeżeli musisz zmienić model, effort albo narzędzia, zrób najpierw krótki handoff i potraktuj dalszą pracę jak nowy etap.
+| Zmiana | Co zwykle oznacza |
+| --- | --- |
+| Zmiana modelu | osobny cache dla nowej konfiguracji |
+| Zmiana effort / reasoning | nowy wariant pracy modelu |
+| Podłączenie MCP w trakcie zadania | inny zestaw narzędzi w kontekście |
+| Włączenie albo wyłączenie pluginu | potencjalna zmiana tool definitions |
+| `/compact` w środku debugowania | historia zostaje zastąpiona streszczeniem |
+| Upgrade narzędzia kodującego | możliwa zmiana system promptu |
+| Start w innym katalogu lub worktree | inny kontekst roboczy |
+
+Nie chodzi o to, że tych rzeczy nigdy nie wolno robić. Czasem trzeba. Chodzi o moment. Jeżeli zmiana jest potrzebna, zrób krótki handoff: co robimy, jakie pliki zostały zmienione, jakie testy przeszły, co jest następnym krokiem. Potem potraktuj dalszą pracę jak nowy etap, a nie kontynuację tej samej stabilnej sesji.
+
+## Dopisuj szum na końcu, nie na początku
+
+Największy wróg cache'a to dynamiczne dane na początku kontekstu. Timestamp, run id, losowa notatka z harnessu, pełny log testu albo surowy output narzędzia nie powinny poprzedzać stabilnych instrukcji.
+
+Zły układ wygląda tak:
+
+```text
+Run id: 91f...
+Current time: 2026-06-24 20:14:02
+Ostatnie 500 linii logu...
+<reguły repozytorium>
+<definicje narzędzi>
+<cel zadania>
+```
+
+Lepszy układ jest odwrotny:
+
+```text
+<cel zadania>
+<reguły repozytorium>
+<stabilne ograniczenia>
+<kryterium zakończenia>
+
+Zmienne dane z tego uruchomienia:
+- run id: 91f...
+- time: 2026-06-24 20:14:02
+- istotny fragment błędu: ...
+```
+
+Ta sama zasada dotyczy własnych harnessów. Sortuj narzędzia deterministycznie, nie generuj dynamicznych opisów tooli, nie wkładaj losowych metadanych do system promptu i nie przesuwaj stałych bloków tylko dlatego, że JSON akurat zwrócił inną kolejność.
 
 ## Co można robić bez paniki
 
-Claude Code docs odróżniają akcje, które psują cache, od akcji, które zwykle tylko dopisują coś na końcu rozmowy albo nie zmieniają prefiksu.
+Nie każda aktywność agenta psuje cache. Normalna praca w repozytorium zwykle dopisuje nowe fakty do rozmowy, ale nie musi zmieniać jej stabilnego początku. Edycja plików, uruchamianie testów, czytanie kolejnych plików, korzystanie ze skilli czy komend, a nawet spawn subagenta nie muszą same z siebie niszczyć prefiksu głównego wątku.
 
-Zwykle bezpieczne dla cache'a:
+To rozróżnienie jest ważne. Nie chodzi o to, żeby agent bał się pracować. Chodzi o to, żeby nie przebudowywać stanowiska w trakcie każdej tury. Najpierw ustawiasz środowisko, potem pracujesz małymi krokami: czytasz, edytujesz, uruchamiasz test, poprawiasz, uruchamiasz ponownie. W tym rytmie cache ma szansę robić swoje.
 
-- edytowanie plików w repozytorium;
-- uruchamianie komend i testów;
-- czytanie kolejnych plików;
-- korzystanie ze skilli i komend, jeżeli są dopisywane jako wiadomości;
-- zmiana permission mode;
-- `/recap`, bo dopisuje podsumowanie zamiast zastępować historię;
-- rewind do wcześniejszego prefiksu;
-- spawn subagenta, bo subagent dostaje osobny kontekst, a główny wątek nie musi wchłaniać całego szumu.
+## Jak poznać, że robisz to dobrze
 
-To nie znaczy, że te akcje są darmowe. Znaczy tylko, że nie muszą rozwalić wcześniej zbudowanego prefiksu głównego wątku.
+Jeżeli korzystasz z API, patrz na metryki: `cached_tokens`, cache read/write tokens, output tokens i time to first token. Jeżeli używasz gotowego narzędzia, często nie zobaczysz pełnej telemetrii, ale nadal możesz obserwować objawy. Pierwsza tura po zmianie modelu będzie zwykle droższa lub wolniejsza. Stabilna, długa sesja powinna po rozgrzaniu działać płynniej. Kompakcja albo zmiana toolsetu może wyraźnie zmienić charakter kolejnej tury.
+
+Gdy cache hit rate jest słaby, najpierw sprawdź początek promptu. Czy naprawdę zaczyna się od tych samych instrukcji? Czy przed nimi nie wylądował timestamp albo losowy identyfikator? Czy model, effort i narzędzia są stabilne? Czy nie kompaktujesz w połowie debugowania? Zwykle problem nie leży w samym providerze, tylko w tym, jak składamy kontekst.
+
+## Najbardziej praktyczna wersja
+
+Jeżeli miałbym sprowadzić to do jednej rutyny, wyglądałaby tak: zacznij od stabilnego ustawienia sesji, trzymaj reguły repozytorium w plikach, nie zmieniaj modelu ani narzędzi w środku pracy, logi i wyniki testów dopisuj na końcu, a większe zmiany konfiguracji traktuj jak nowy etap z krótkim handoffem.
+
+Wtedy prompt caching przestaje być abstrakcyjną funkcją providera. Staje się po prostu efektem dobrego prowadzenia pracy agenta.
 
 ## Źródła
 
