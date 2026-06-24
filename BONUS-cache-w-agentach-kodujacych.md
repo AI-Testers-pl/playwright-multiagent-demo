@@ -107,47 +107,9 @@ Zwykle bezpieczne dla cache'a:
 
 To nie znaczy, że te akcje są darmowe. Znaczy tylko, że nie muszą rozwalić wcześniej zbudowanego prefiksu głównego wątku.
 
-## Jak prowadzić eksplorację repozytorium
-
-Agent kodujący często zaczyna od czytania zbyt wielu plików. To psuje jakość, puchnie kontekst i zwiększa koszt. Lepszy wzorzec to eksploracja warstwowa.
-
-Najpierw:
-
-```text
-Przeczytaj tylko:
-- AGENTS.md;
-- package.json;
-- istniejące testy w najbliższym katalogu;
-- page objecty związane z tym flow.
-
-Zwróć mapę 5-8 punktów i powiedz, których plików potrzebujesz dalej.
-```
-
-Potem:
-
-```text
-Teraz przeczytaj tylko pliki potrzebne do implementacji planu.
-Nie skanuj całego repozytorium.
-Nie wklejaj pełnych logów, tylko istotny fragment błędu.
-```
-
-W pracy z Playwrightem:
-
-```text
-Najpierw użyj Playwright CLI do eksploracji strony.
-Zapisz tylko stabilne obserwacje:
-- role i nazwy dostępności;
-- dostępne data-testid;
-- ważne stany po kliknięciach;
-- URL lub route, jeśli ma znaczenie;
-- brakujące selektory, jeśli trzeba poprawić aplikację.
-```
-
-To daje agentowi praktyczne dane, ale nie zalewa głównego wątku pełnym dumpem DOM, screenshotów i logów.
-
 ## Jak używać subagentów
 
-Subagenci nie są sposobem na darmowe przyspieszenie. Codex manual jasno opisuje tradeoff: każdy subagent wykonuje własną pracę modelu i narzędzi, więc multi-agent może zużyć więcej tokenów niż pojedynczy run. Warto ich używać wtedy, gdy izolacja szumu albo równoległość naprawdę daje zysk.
+Subagenci nie są sposobem na darmowe przyspieszenie. Każdy subagent wykonuje własną pracę modelu i narzędzi, więc multi-agent może zużyć więcej tokenów niż pojedynczy run. Warto ich używać wtedy, gdy izolacja szumu albo równoległość naprawdę daje zysk.
 
 Używaj subagentów do:
 
@@ -376,7 +338,5 @@ Cache w agentach kodujących to dyscyplina pracy, nie przełącznik.
 - OpenAI, "Unrolling the Codex agent loop": <https://openai.com/index/unrolling-the-codex-agent-loop/>
 - Claude API docs, prompt caching: <https://platform.claude.com/docs/en/build-with-claude/prompt-caching>
 - "Don't Break the Cache: An Evaluation of Prompt Caching for Long-Horizon Agentic Tasks": <https://arxiv.org/html/2601.06007v2>
-- Codex manual, sekcje "Subagents" i "Best practices", pobrane 2026-06-24 przez OpenAI docs helper.
-- Cameron Wolfe X post podany przez użytkownika: <https://x.com/cwolferesearch/status/2054202312436953270>. Bezpośrednia treść posta nie była możliwa do pobrania w tym środowisku, więc link traktuję jako inspirację tematu, nie jako źródło szczegółowych twierdzeń.
 
 Stan na: 2026-06-24.
