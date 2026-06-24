@@ -138,6 +138,25 @@ Agent Browser warto znać jako trzecią opcję. Jest podobny do Playwright CLI w
 
 Na końcu wszystkie te produkty rozwiązują ten sam problem: dają agentowi dostęp do przeglądarki. W praktyce warto traktować je jako różne implementacje tej samej idei, a nie jako narzędzia z zupełnie innych światów.
 
+```mermaid
+flowchart TD
+    A["Agent AI potrzebuje dostępu do przeglądarki"] --> B["Playwright CLI"]
+    A --> C["Playwright MCP"]
+    A --> D["Agent Browser"]
+
+    B --> B1["Prosty workflow terminalowy"]
+    B --> B2["Dobre dopasowanie do pracy w repozytorium"]
+    B --> B3["Bez zarządzania serwerem MCP"]
+
+    C --> C1["Standardowy protokół narzędzi"]
+    C --> C2["Lepsze dopasowanie do klientów MCP"]
+    C --> C3["Naturalny wybór dla bardziej sformalizowanych środowisk"]
+
+    D --> D1["CLI-first podobnie jak Playwright CLI"]
+    D --> D2["Mocny fokus na React, Web Vitals i nowoczesny frontend"]
+    D --> D3["Ciekawa alternatywa w ekosystemie Vercela"]
+```
+
 ## Źródła i materiały
 
 ### Źródła podstawowe
