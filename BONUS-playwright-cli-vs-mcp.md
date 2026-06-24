@@ -128,36 +128,15 @@ Wybierz Playwright MCP, gdy:
 
 MCP może być wygodniejsze na starcie, szczególnie dla osób, które już mają skonfigurowany edytor z MCP i chcą po prostu dodać przeglądarkę jako narzędzie.
 
-## Co to oznacza dla kursantów
+## Jak ja o tym myślę
 
-W praktyce nie chodzi o to, że jedno narzędzie jest zawsze lepsze od drugiego. Chodzi o dopasowanie do zadania.
+Osobiście najczęściej wybieram Playwright CLI, bo jest prostszy operacyjnie. Nie muszę pamiętać o uruchamianiu i wyłączaniu serwera MCP, nie dokładam kolejnej warstwy konfiguracji i mogę traktować eksplorację przeglądarki jak zwykły element pracy w terminalu.
 
-Jeśli celem jest **wytwarzanie testów w repozytorium**, Playwright CLI jest bardziej naturalne. Agent może użyć terminala do eksploracji strony, potem od razu edytować pliki, uruchomić nowy test, a na końcu całą paczkę UI testów.
+W bardziej sformalizowanych środowiskach, np. korporacyjnych albo bankowych, Playwright MCP może być bezpieczniejszą i łatwiejszą do ustandaryzowania opcją. MCP daje wyraźny protokół integracji narzędzi, lepiej pasuje do centralnie zarządzanych klientów AI i może być naturalniejszy tam, gdzie ważne są kontrola dostępu, audytowalność i powtarzalna konfiguracja środowiska.
 
-Jeśli celem jest **podłączenie przeglądarki do agenta przez standardowy protokół narzędzi**, Playwright MCP jest bardzo dobrym wyborem. Szczególnie wtedy, gdy środowisko pracy już obsługuje MCP i cały workflow jest zbudowany wokół narzędzi MCP.
+Agent Browser warto znać jako trzecią opcję. Jest podobny do Playwright CLI w tym sensie, że też idzie w stronę pracy CLI-first, ale mocniej akcentuje nowoczesne aplikacje frontendowe, Reacta, Web Vitals i ekosystem Vercela.
 
-Dla tego kursu najważniejsza lekcja jest taka:
-
-> Playwright CLI traktuj jako narzędzie robocze dla agenta kodującego. Playwright MCP traktuj jako standardową integrację przeglądarki z klientem AI.
-
-Agent Browser warto znać jako trzecią opcję. Jeżeli pracujesz głównie z Reactem, Next.js albo ekosystemem Vercela, może być bardzo wygodny. Jeżeli jednak celem jest pisanie i utrzymywanie testów Playwrighta w tym repozytorium, Playwright CLI pozostaje najbardziej spójne z resztą materiału.
-
-## Proponowany workflow w tym repozytorium
-
-1. Agent eksploruje testowaną stronę przez Playwright CLI.
-2. Zbiera stabilne obserwacje: teksty, role, dostępne akcje, stany po kliknięciach.
-3. Tworzy albo aktualizuje Page Object w `/pages` i ewentualne komponenty w `/components`.
-4. Pisze test UI z układem given / when / then.
-5. Uruchamia najpierw nowy test.
-6. Uruchamia pełny zestaw:
-
-```bash
-npm run test:ui
-```
-
-7. Aktualizuje `e2e-ui-test-implementation-plan.md`, jeżeli dodał nowy pakiet testów.
-
-To pokazuje, gdzie Playwright CLI ma największy sens: nie jako osobny gadżet, tylko jako część kompletnego cyklu pracy agenta testowego.
+Na końcu wszystkie te produkty rozwiązują ten sam problem: dają agentowi dostęp do przeglądarki. W praktyce warto traktować je jako różne implementacje tej samej idei, a nie jako narzędzia z zupełnie innych światów.
 
 ## Źródła i materiały
 
