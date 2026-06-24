@@ -5,7 +5,9 @@ Ten bonus porównuje dwa sposoby używania Playwrighta w pracy z agentami AI:
 - **Playwright CLI** z repozytorium `microsoft/playwright-cli`
 - **Playwright MCP** z repozytorium `microsoft/playwright-mcp`
 
-Oba narzędzia służą do sterowania przeglądarką przez agenta, ale są zoptymalizowane pod inne style pracy. Najkrótsza praktyczna odpowiedź brzmi: **Playwright CLI lepiej pasuje do agentów kodujących, a Playwright MCP lepiej pasuje do klientów MCP i interaktywnego eksplorowania strony z poziomu narzędzi takich jak VS Code, Cursor, Windsurf czy Claude Desktop.**
+Na końcu pojawia się też krótka alternatywa: **Agent Browser** z ekosystemu Vercela.
+
+Te narzędzia służą do sterowania przeglądarką przez agenta, ale są zoptymalizowane pod inne style pracy. Najkrótsza praktyczna odpowiedź brzmi: **Playwright CLI lepiej pasuje do agentów kodujących, Playwright MCP lepiej pasuje do klientów MCP, a Agent Browser jest ciekawą alternatywą CLI-first, szczególnie dla aplikacji React, Next.js i workflowów osadzonych w ekosystemie Vercela.**
 
 ## Najpierw ważne rozróżnienie
 
@@ -71,18 +73,35 @@ Najważniejsze cechy:
 
 MCP jest więc bardzo dobrym wyborem, gdy pracujemy w narzędziu, które już ma sensowną obsługę MCP i chcemy dodać przeglądarkę jako kolejne narzędzie agenta.
 
+## Alternatywa: Agent Browser od Vercela
+
+Agent Browser to narzędzie CLI do automatyzacji przeglądarki dla agentów AI. Pod względem sposobu pracy jest bliżej Playwright CLI niż Playwright MCP, bo agent steruje przeglądarką przez komendy terminalowe, a nie przez serwer MCP.
+
+Przykładowy styl pracy wygląda podobnie:
+
+```bash
+agent-browser open https://example.com
+agent-browser snapshot
+agent-browser click @e2
+agent-browser fill @e3 "test@example.com"
+```
+
+Najważniejsza różnica polega na tym, że Agent Browser mocno akcentuje workflowy dla nowoczesnych aplikacji frontendowych. Według dokumentacji projektu wspiera m.in. sesje, profile, stan logowania, cookies, storage, kontrolę sieci, zrzuty ekranu, metryki Web Vitals oraz introspekcję Reacta po uruchomieniu z odpowiednią opcją.
+
+Warto o nim wspomnieć kursantom jako o narzędziu podobnej klasy, ale nie traktowałbym go w tym repozytorium jako głównego wyboru. Ten kurs jest zbudowany wokół Playwrighta, Page Object Model i testów w `@playwright/test`, więc Playwright CLI daje bardziej bezpośrednie połączenie z resztą materiału.
+
 ## Porównanie praktyczne
 
-| Kryterium | Playwright CLI | Playwright MCP |
-| --- | --- | --- |
-| Główny interfejs | Terminal | Serwer MCP |
-| Najlepsze dopasowanie | Agenci kodujący pracujący w repozytorium | Klienci i edytory z natywną obsługą MCP |
-| Koszt kontekstu modelu | Zwykle niższy, bo agent wykonuje krótkie komendy, a artefakty zostają lokalnie | Zwykle wyższy, bo klient MCP musi obsługiwać schematy narzędzi i snapshoty |
-| Integracja z repo | Naturalna: komendy CLI, pliki, artefakty, testy, trace | Zależna od klienta MCP i konfiguracji serwera |
-| Styl pracy | Terminal-first, dobrze pasuje do automatyzacji przez agenta | Tool-first, dobrze pasuje do interaktywnej pracy w kliencie MCP |
-| Izolacja sesji | Jawne sesje przez `-s=nazwa` i profile | Zależna od konfiguracji serwera MCP i klienta |
-| Artefakty | Snapshoty, screenshoty, trace, video, storage state w lokalnym workflow | Snapshoty i akcje dostępne przez protokół MCP |
-| Debugowanie w repo | Łatwe do połączenia z komendami `npm`, testami i plikami projektu | Dobre do eksploracji, ale bardziej zależne od integracji narzędzia |
+| Kryterium | Playwright CLI | Playwright MCP | Agent Browser |
+| --- | --- | --- | --- |
+| Główny interfejs | Terminal | Serwer MCP | Terminal |
+| Najlepsze dopasowanie | Agenci kodujący pracujący w repozytorium | Klienci i edytory z natywną obsługą MCP | Agenci CLI-first, szczególnie przy nowoczesnych aplikacjach frontendowych |
+| Koszt kontekstu modelu | Zwykle niższy, bo agent wykonuje krótkie komendy, a artefakty zostają lokalnie | Zwykle wyższy, bo klient MCP musi obsługiwać schematy narzędzi i snapshoty | Również projektowany pod zwięzłe, agentowe interakcje |
+| Integracja z repo | Naturalna: komendy CLI, pliki, artefakty, testy, trace | Zależna od klienta MCP i konfiguracji serwera | Naturalna dla pracy terminalowej, szczególnie gdy projekt korzysta z Reacta lub Next.js |
+| Styl pracy | Terminal-first, dobrze pasuje do automatyzacji przez agenta | Tool-first, dobrze pasuje do interaktywnej pracy w kliencie MCP | Terminal-first, z dodatkowymi funkcjami dla Reacta, Web Vitals i kontroli sieci |
+| Izolacja sesji | Jawne sesje przez `-s=nazwa` i profile | Zależna od konfiguracji serwera MCP i klienta | Sesje, profile, cookies, storage i stan logowania |
+| Artefakty | Snapshoty, screenshoty, trace, video, storage state w lokalnym workflow | Snapshoty i akcje dostępne przez protokół MCP | Snapshoty, screenshoty, Web Vitals, dane sesji i narzędzia diagnostyczne |
+| Debugowanie w repo | Łatwe do połączenia z komendami `npm`, testami i plikami projektu | Dobre do eksploracji, ale bardziej zależne od integracji narzędzia | Dobre do eksploracji i diagnostyki frontendowej, mniej bezpośrednio powiązane z Playwright Test |
 
 ## Kiedy wybrać Playwright CLI
 
@@ -121,6 +140,8 @@ Dla tego kursu najważniejsza lekcja jest taka:
 
 > Playwright CLI traktuj jako narzędzie robocze dla agenta kodującego. Playwright MCP traktuj jako standardową integrację przeglądarki z klientem AI.
 
+Agent Browser warto znać jako trzecią opcję. Jeżeli pracujesz głównie z Reactem, Next.js albo ekosystemem Vercela, może być bardzo wygodny. Jeżeli jednak celem jest pisanie i utrzymywanie testów Playwrighta w tym repozytorium, Playwright CLI pozostaje najbardziej spójne z resztą materiału.
+
 ## Proponowany workflow w tym repozytorium
 
 1. Agent eksploruje testowaną stronę przez Playwright CLI.
@@ -158,6 +179,14 @@ To pokazuje, gdzie Playwright CLI ma największy sens: nie jako osobny gadżet, 
   <https://playwright.dev/docs/getting-started-mcp>  
   Oficjalny opis uruchamiania Playwright MCP i podłączania go do klientów AI obsługujących MCP.
 
+- **Agent Browser od Vercela**  
+  <https://github.com/vercel-labs/agent-browser>  
+  Alternatywne narzędzie CLI do automatyzacji przeglądarki przez agentów AI. Warto sprawdzić szczególnie przy aplikacjach React, Next.js i workflowach, w których przydatne są Web Vitals, introspekcja Reacta, profile i stan sesji.
+
+- **Strona projektu Agent Browser**  
+  <https://agent-browser.dev/>  
+  Krótszy opis funkcji, instalacji i typowych przypadków użycia.
+
 ### Kontekst techniczny
 
 - **Dokumentacja Playwrighta**  
@@ -189,7 +218,8 @@ To pokazuje, gdzie Playwright CLI ma największy sens: nie jako osobny gadżet, 
 
 1. Najpierw przeczytaj artykuł Awesome Testing i ten bonus.
 2. Potem sprawdź README w `microsoft/playwright-cli` i `microsoft/playwright-mcp`.
-3. Następnie porównaj `main/` z `wynik/`, zwracając uwagę na to, gdzie agent najpierw eksploruje aplikację, a dopiero potem pisze testy.
-4. Na końcu wróć do dokumentacji Playwrighta o lokatorach i codegen, żeby zobaczyć różnicę między klasycznym generowaniem testu a agentowym workflow.
+3. Jeżeli interesują Cię alternatywy CLI-first, sprawdź `vercel-labs/agent-browser`.
+4. Następnie porównaj `main/` z `wynik/`, zwracając uwagę na to, gdzie agent najpierw eksploruje aplikację, a dopiero potem pisze testy.
+5. Na końcu wróć do dokumentacji Playwrighta o lokatorach i codegen, żeby zobaczyć różnicę między klasycznym generowaniem testu a agentowym workflow.
 
 Stan na: 2026-06-24.
