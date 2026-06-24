@@ -119,9 +119,19 @@ Na końcu oba produkty rozwiązują ten sam problem: dają agentowi dostęp do p
 
 ```mermaid
 flowchart TD
-    A["Agent AI potrzebuje dostępu do przeglądarki"]
-    A --> B["Playwright CLI<br/>prosty workflow terminalowy<br/>bez uruchamiania serwera MCP<br/>wygodny w pracy z repozytorium"]
-    A --> C["Playwright MCP<br/>standardowy protokół narzędzi<br/>lepsze dopasowanie do klientów MCP<br/>naturalniejszy w sformalizowanych środowiskach"]
+    Need["Agent AI<br/>potrzebuje dostępu<br/>do przeglądarki"]
+    Need --> Same["Ten sam problem<br/>różne implementacje"]
+
+    Same --> CLI["Playwright CLI<br/><br/>prostszy operacyjnie<br/>terminal-first<br/>bez serwera MCP<br/>wygodny w pracy z repozytorium"]
+    Same --> MCP["Playwright MCP<br/><br/>standardowy protokół narzędzi<br/>lepsze dopasowanie do klientów MCP<br/>naturalniejszy w sformalizowanych środowiskach"]
+
+    classDef root fill:#f8fafc,stroke:#64748b,stroke-width:1px,color:#0f172a,font-weight:bold;
+    classDef shared fill:#fefce8,stroke:#ca8a04,stroke-width:1px,color:#422006,font-weight:bold;
+    classDef tool fill:#eef2ff,stroke:#6366f1,stroke-width:1.5px,color:#1e1b4b;
+
+    class Need root;
+    class Same shared;
+    class CLI,MCP tool;
 ```
 
 ## Źródła i materiały
