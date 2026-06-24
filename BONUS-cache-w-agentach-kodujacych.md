@@ -44,8 +44,6 @@ Nie chodzi o to, że takich rzeczy nigdy nie wolno robić. Czasem trzeba. Chodzi
 
 Nie każda aktywność agenta psuje cache. Normalna praca w repozytorium zwykle dopisuje nowe fakty do rozmowy, ale nie musi zmieniać jej stabilnego początku. Edycja plików, uruchamianie testów, czytanie kolejnych plików, korzystanie ze skilli czy komend, a nawet spawn subagenta nie muszą same z siebie niszczyć prefiksu głównego wątku.
 
-To jest ważne praktycznie, bo celem nie jest sparaliżowanie pracy agenta. Agent nadal ma czytać, edytować, odpalać testy i poprawiać błędy. Różnica polega na tym, żeby nie zmieniać konfiguracji stanowiska przy każdej turze. Stabilna sesja może być bardzo aktywna, o ile jej fundament pozostaje ten sam.
-
 ## Jak poznać, że robisz to dobrze
 
 Jeżeli korzystasz z API, patrz na metryki: `cached_tokens`, cache read/write tokens, output tokens i time to first token. Jeżeli używasz gotowego narzędzia, często nie zobaczysz pełnej telemetrii, ale nadal możesz obserwować objawy. Pierwsza tura po zmianie modelu będzie zwykle droższa lub wolniejsza. Stabilna, długa sesja powinna po rozgrzaniu działać płynniej. Kompakcja albo zmiana toolsetu może wyraźnie zmienić charakter kolejnej tury.
