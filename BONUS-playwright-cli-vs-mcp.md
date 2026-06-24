@@ -122,16 +122,18 @@ flowchart TD
     Need["Agent AI<br/>potrzebuje dostępu<br/>do przeglądarki"]
     Need --> Same["Ten sam problem<br/>różne implementacje"]
 
-    Same --> CLI["Playwright CLI<br/><br/>prostszy operacyjnie<br/>terminal-first<br/>bez serwera MCP<br/>wygodny w pracy z repozytorium"]
-    Same --> MCP["Playwright MCP<br/><br/>standardowy protokół narzędzi<br/>lepsze dopasowanie do klientów MCP<br/>naturalniejszy w sformalizowanych środowiskach"]
+    Same --> CLI["Playwright CLI<br/><br/>- prostszy operacyjnie<br/>- terminal-first<br/>- bez serwera MCP<br/>- wygodny w repozytorium"]
+    Same --> MCP["Playwright MCP<br/><br/>- standardowy protokół<br/>- klienci MCP<br/>- łatwiejsza standaryzacja<br/>- środowiska formalne"]
 
     classDef root fill:#f8fafc,stroke:#64748b,stroke-width:1px,color:#0f172a,font-weight:bold;
     classDef shared fill:#fefce8,stroke:#ca8a04,stroke-width:1px,color:#422006,font-weight:bold;
-    classDef tool fill:#eef2ff,stroke:#6366f1,stroke-width:1.5px,color:#1e1b4b;
+    classDef cli fill:#ecfeff,stroke:#0891b2,stroke-width:1.5px,color:#164e63;
+    classDef mcp fill:#eef2ff,stroke:#6366f1,stroke-width:1.5px,color:#1e1b4b;
 
     class Need root;
     class Same shared;
-    class CLI,MCP tool;
+    class CLI cli;
+    class MCP mcp;
 ```
 
 ## Źródła i materiały
