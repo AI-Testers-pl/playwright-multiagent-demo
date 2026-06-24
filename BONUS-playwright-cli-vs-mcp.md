@@ -171,20 +171,4 @@ flowchart TD
   <https://modelcontextprotocol.io/>  
   Ogólny kontekst dla MCP: czym jest protokół, jak klienci AI komunikują się z narzędziami i dlaczego Playwright MCP pasuje do tego ekosystemu.
 
-### Materiały do pracy z tym repozytorium
-
-- `PROMPT.md` - główny prompt pokazujący podział pracy na agentów.
-- `main/` - punkt startowy dla kursantów.
-- `wynik/` - gotowy rezultat po pracy agentów.
-- `main/e2e-ui-test-implementation-plan.md` i `wynik/e2e-ui-test-implementation-plan.md` - przykłady wysokopoziomowego planu pokrycia UI testami.
-- `main/pages/` i `wynik/pages/` - Page Objecty używane w testach.
-- `main/tests/ui/` i `wynik/tests/ui/` - przykłady testów UI zgodnych z konwencją kursu.
-
-### Jak korzystać z tych materiałów
-
-1. Najpierw przeczytaj artykuł Awesome Testing i ten bonus.
-2. Potem sprawdź README w `microsoft/playwright-cli` i `microsoft/playwright-mcp`.
-3. Następnie porównaj `main/` z `wynik/`, zwracając uwagę na to, gdzie agent najpierw eksploruje aplikację, a dopiero potem pisze testy.
-4. Na końcu wróć do dokumentacji Playwrighta o lokatorach i codegen, żeby zobaczyć różnicę między klasycznym generowaniem testu a agentowym workflow.
-
 Stan na: 2026-06-24.
