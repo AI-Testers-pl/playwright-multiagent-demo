@@ -1,265 +1,346 @@
-# Bonus: cache w agentach kodujących
+# Bonus: jak korzystać z cache'a w agentach kodujących
 
-Ten bonus wyjaśnia, jak myśleć o prompt cache'u w pracy z agentami kodującymi: Codexem, Claude Code, własnym harness'em opartym o API albo zestawem subagentów uruchamianych równolegle.
+Prompt caching to mechanizm, w którym provider ponownie wykorzystuje wcześniej przetworzony początek promptu. Agent kodujący przy każdej turze wysyła dużo kontekstu: instrukcje systemowe, definicje narzędzi, reguły repozytorium, historię rozmowy, wyniki tooli i nową prośbę. Cache sprawia, że niezmieniony prefiks nie musi być liczony od zera w każdej turze. Stosuje się go po to, żeby długie sesje agentowe były tańsze i szybsze, ale efekt zależy od tego, czy pracujemy w sposób przyjazny dla cache'a.
 
-Najkrótsza praktyczna odpowiedź brzmi: **cache premiuje stabilny początek kontekstu**. Jeżeli agent przez wiele tur wysyła podobny prefiks promptu, provider może ponownie użyć wcześniej przetworzonej części. Jeżeli zmieniasz model, narzędzia, instrukcje systemowe albo strukturę promptu w środku zadania, często płacisz za ponowne przetworzenie dużej części kontekstu.
+Najważniejsza praktyczna zasada:
 
-To nie jest tylko temat kosztów. To wpływa też na szybkość, sposób dzielenia pracy na subagentów i moment, w którym warto kompaktować rozmowę.
+> Wybierz konfigurację na początku, trzymaj stabilne instrukcje wysoko w kontekście, a zmienny szum doklejaj na końcu.
 
-## Najpierw ważne rozróżnienie
+Ten bonus nie jest opisem teorii prompt cachingu. To playbook do pracy z Codexem, Claude Code, własnym agentem przez API albo multi-agentowym workflowem w repozytorium.
 
-Prompt cache nie oznacza, że model pamięta odpowiedź albo że można odzyskać wcześniejszy wynik bez liczenia nowej generacji. Cache dotyczy wejścia do modelu, najczęściej prefiksu promptu, czyli tej części, która pojawia się na początku kolejnych requestów.
+## Co robić na początku sesji
 
-W agentach kodujących ta część często zawiera:
+Najdroższy błąd to zacząć chaotycznie, a potem w połowie długiej sesji zmieniać model, effort, narzędzia i zakres zadania. Claude Code docs pokazują to bardzo konkretnie: model i effort są częścią cache key, narzędzia mogą siedzieć w warstwie system promptu, a kompakcja zmienia warstwę rozmowy. OpenAI prompt caching docs mówią tę samą rzecz na niższym poziomie: cache działa na dokładnym prefiksie.
 
-- instrukcje systemowe i styl pracy agenta;
-- definicje narzędzi;
-- reguły repozytorium, np. `AGENTS.md`;
-- krótką mapę projektu;
-- wcześniejsze wiadomości, obserwacje i wyniki narzędzi;
-- aktualną prośbę użytkownika.
+Na początku sesji ustaw:
 
-Jeżeli początek kolejnego requestu jest taki sam jak wcześniej, cache może zadziałać. Jeżeli różni się na początku, model musi przetworzyć więcej rzeczy od nowa. Dlatego najważniejsza zasada brzmi:
+- model;
+- reasoning / effort;
+- katalog roboczy;
+- zestaw narzędzi i MCP;
+- tryb pracy, np. plan-first albo implement-first;
+- reguły repozytorium;
+- kryterium zakończenia.
 
-> Stabilne rzeczy trzymaj na początku. Zmienne rzeczy doklejaj na końcu.
+Potem nie ruszaj tych rzeczy bez powodu.
 
-## Dlaczego to jest szczególnie ważne dla agentów
-
-Zwykły chatbot często dostaje krótkie pytanie i krótką historię. Agent kodujący działa inaczej. Czyta pliki, uruchamia testy, odbiera logi, analizuje diffy, wywołuje narzędzia i prowadzi długą rozmowę z repozytorium. OpenAI w artykule o pętli Codexa opisuje, że w kolejnych turach historia rozmowy trafia do promptu, a rosnący kontekst staje się jednym z problemów, który harness musi kontrolować.
-
-W badaniu **"Don't Break the Cache: An Evaluation of Prompt Caching for Long-Horizon Agentic Tasks"** autorzy sprawdzali prompt caching na wieloturowych zadaniach agentowych z użyciem narzędzi. Wynik jest praktycznie istotny: cache obniżał koszt API o **41-80%** i poprawiał time to first token o **13-31%** w zależności od providera i strategii. Najważniejszy wniosek nie brzmi jednak "włącz cache i zapomnij". Najlepiej działa świadome kontrolowanie granic cache'u, np. cache'owanie stabilnego system promptu i unikanie cache'owania dynamicznych wyników narzędzi.
-
-To dobrze pasuje do pracy w repozytorium. Reguły projektu, styl testów i struktura aplikacji są stabilne. Logi, wyniki testów i obserwacje z przeglądarki są zmienne.
-
-## Jak działa cache u popularnych providerów
-
-OpenAI opisuje prompt caching jako mechanizm automatyczny dla nowszych modeli. Cache działa dla promptów od określonego progu tokenów, a trafienia w cache widać w `usage.prompt_tokens_details.cached_tokens`. Dokumentacja podkreśla dokładne dopasowanie prefiksu: statyczne instrukcje i przykłady powinny być wcześniej, a zmienne dane użytkownika później.
-
-Claude API daje większą kontrolę przez `cache_control` i cache breakpoints. Dokumentacja Anthropic opisuje 5-minutowy cache jako domyślny oraz 1-godzinny wariant za wyższy koszt zapisu. Ważny szczegół cenowy: odczyt z cache'u jest liczony jako ułamek ceny zwykłego inputu, ale zapis cache'u może być droższy niż zwykły input. To znaczy, że cache opłaca się szczególnie wtedy, gdy ten sam prefiks będzie używany więcej niż raz.
-
-Claude Code ukrywa większość tego mechanizmu za narzędziem, ale jego dokumentacja pokazuje dokładnie ten sam model: każda tura wysyła pełny kontekst, a cache unika ponownego przetwarzania niezmienionego prefiksu. Dokumentacja wyraźnie wymienia też działania, które potrafią zepsuć cache: zmiana modelu, zmiana effort level, część zmian MCP/pluginów/narzędzi, kompakcja i upgrade narzędzia.
-
-Gemini API ma implicit context caching dla nowszych modeli. Google również zaleca umieszczanie dużych wspólnych treści na początku promptu i wykonywanie podobnych requestów w krótkim odstępie czasu. Bedrock pokazuje z kolei wariant bardziej jawny: można ustawiać cache checkpoints w `system`, `messages` i `tools`, a limity zależą od modelu.
-
-Wniosek praktyczny jest wspólny dla wszystkich tych środowisk:
-
-- cache działa najlepiej na stabilnym, powtarzalnym kontekście;
-- dynamiczne wyniki narzędzi są dobrym kandydatem na koniec promptu, nie na początek;
-- różne modele i providery mają inne progi, TTL i metryki;
-- nie warto zgadywać, trzeba mierzyć cache hit rate.
-
-## Co cache daje, a czego nie daje
-
-Cache pomaga w:
-
-- obniżaniu kosztu input tokens;
-- skracaniu czasu do pierwszego tokena;
-- długich sesjach, w których agent pracuje iteracyjnie;
-- workflowach z powtarzalnym kontekstem projektu;
-- własnych harnessach, które potrafią utrzymać stabilny prefiks.
-
-Cache nie rozwiązuje:
-
-- kosztu output tokens;
-- kosztu złych decyzji agenta;
-- kosztu uruchamiania narzędzi;
-- konfliktów między subagentami;
-- problemu zaśmieconego kontekstu;
-- potrzeby testów, review i walidacji.
-
-To jest ważne w multi-agentach. Jeżeli uruchomisz pięciu agentów, każdy z nich nadal generuje output, wykonuje narzędzia i ma własny przebieg pracy. Cache może obniżyć część kosztu wejścia, ale nie sprawia, że równoległość jest darmowa.
-
-## Playbook 1: zacznij sesję od stabilnego prefiksu
-
-Pierwsze tury sesji budują kontekst, który będzie potem wracał. Dlatego nie warto zaczynać od chaotycznego dumpu logów, losowych hipotez i pełnego przeglądu repozytorium.
-
-Dobry start zawiera:
-
-1. cel zadania;
-2. najważniejsze pliki albo katalogi;
-3. reguły pracy;
-4. kryterium zakończenia;
-5. prośbę o krótką eksplorację przed edycją.
-
-Przykład dla testów UI:
+Dobre otwarcie zadania:
 
 ```text
-Cel: dodaj test Playwright dla ścieżki checkout happy path.
-Kontekst: użyj AGENTS.md, e2e-ui-test-implementation-plan.md, pages/, components/.
-Reguły: data-testid selectors, given/when/then, Page Object Model.
-Done when: najpierw przechodzi nowy test, potem npm run test:ui, a plan testów jest zaktualizowany.
+Cel: dodaj test UI Playwright dla ścieżki checkout happy path.
 
-Najpierw zbadaj tylko istotną stronę i istniejącą strukturę testów. Zwróć krótki plan przed edycją.
+Stały kontekst:
+- użyj AGENTS.md;
+- trzymaj się Page Object Model;
+- preferuj data-testid;
+- test ma mieć układ given / when / then;
+- nowy test uruchom pierwszy, potem npm run test:ui.
+
+Najpierw:
+1. przejrzyj tylko istotne pliki;
+2. zbadaj stronę Playwright CLI;
+3. zwróć krótki plan;
+4. nie edytuj plików przed planem.
 ```
 
-Taki prompt pomaga jakościowo, ale ma też sens cache'owy: stabilne reguły są na początku, a zmienne obserwacje dojdą później.
+To jest dobre nie tylko dlatego, że jest jasne. Jest dobre również cache'owo: stabilne reguły pojawiają się wcześnie, a zmienne wyniki eksploracji dojdą później.
 
-## Playbook 2: nie mieszaj stałych reguł z losowym szumem
+## Co trzymać w stałych plikach
 
-Najczęstszy błąd w promptach do agentów to mieszanie rzeczy trwałych i jednorazowych.
+Nie powtarzaj w każdym promptcie tych samych instrukcji. Jeżeli reguła ma obowiązywać w repozytorium, przenieś ją do stałego miejsca.
 
-Zły układ:
+Dobre miejsca:
+
+- `AGENTS.md` dla zasad repozytorium;
+- `README.md` dla orientacji projektowej;
+- `e2e-ui-test-implementation-plan.md` dla mapy pokrycia testów;
+- skille / playbooki dla powtarzalnych workflowów;
+- szablony promptów dla typowych zadań.
+
+Przykład reguł, które dobrze pasują do `AGENTS.md`:
+
+```markdown
+## UI tests
+
+- Explore the tested page first with Playwright CLI.
+- Prefer data-testid selectors.
+- Use given / when / then structure.
+- Use Page Object Model.
+- Add pages to /pages and components to /components.
+- Run the newly created test first, then npm run test:ui.
+- Update e2e-ui-test-implementation-plan.md after adding a new suite.
+```
+
+To ogranicza liczbę ręcznych instrukcji w promptach i pomaga agentowi zaczynać kolejne zadania z podobnym, stabilnym kontekstem.
+
+## Czego nie robić w środku długiej sesji
+
+Te akcje zwykle są kosztownymi granicami. Czasem warto je wykonać, ale nie traktuj ich jako neutralnych.
+
+| Akcja | Dlaczego boli | Lepszy moment |
+| --- | --- | --- |
+| Zmiana modelu | Każdy model ma osobny cache | początek sesji albo nowy etap |
+| Zmiana effort / reasoning | Effort może być częścią cache key | początek sesji |
+| Podłączenie MCP w trakcie pracy | Definicje tooli mogą zmienić prefiks | przed rozpoczęciem zadania |
+| Włączenie/wyłączenie pluginu z MCP | Może zmienić zestaw narzędzi | nowa sesja albo naturalna przerwa |
+| Deny całego toola | Zmienia to, jakie narzędzia widzi model | konfiguracja przed zadaniem |
+| `/compact` w środku debugowania | Zastępuje historię streszczeniem | po zakończonym etapie |
+| Upgrade narzędzia kodującego | Może zmienić system prompt i tool definitions | po zakończeniu pracy |
+| Start w innym worktree/katalogu | Katalog roboczy bywa częścią kontekstu | świadoma nowa sesja |
+
+Praktyczna zasada: jeżeli musisz zmienić model, effort albo narzędzia, zrób najpierw krótki handoff i potraktuj dalszą pracę jak nowy etap.
+
+## Co można robić bez paniki
+
+Claude Code docs odróżniają akcje, które psują cache, od akcji, które zwykle tylko dopisują coś na końcu rozmowy albo nie zmieniają prefiksu.
+
+Zwykle bezpieczne dla cache'a:
+
+- edytowanie plików w repozytorium;
+- uruchamianie komend i testów;
+- czytanie kolejnych plików;
+- korzystanie ze skilli i komend, jeżeli są dopisywane jako wiadomości;
+- zmiana permission mode;
+- `/recap`, bo dopisuje podsumowanie zamiast zastępować historię;
+- rewind do wcześniejszego prefiksu;
+- spawn subagenta, bo subagent dostaje osobny kontekst, a główny wątek nie musi wchłaniać całego szumu.
+
+To nie znaczy, że te akcje są darmowe. Znaczy tylko, że nie muszą rozwalić wcześniej zbudowanego prefiksu głównego wątku.
+
+## Jak prowadzić eksplorację repozytorium
+
+Agent kodujący często zaczyna od czytania zbyt wielu plików. To psuje jakość, puchnie kontekst i zwiększa koszt. Lepszy wzorzec to eksploracja warstwowa.
+
+Najpierw:
 
 ```text
-Dzisiaj jest 2026-06-24 17:41:03. Run id: 8d1...
-Oto ostatnie 500 linii logu.
-Oto reguły repozytorium.
-Oto definicje narzędzi.
-Oto cel zadania.
+Przeczytaj tylko:
+- AGENTS.md;
+- package.json;
+- istniejące testy w najbliższym katalogu;
+- page objecty związane z tym flow.
+
+Zwróć mapę 5-8 punktów i powiedz, których plików potrzebujesz dalej.
 ```
 
-Lepszy układ:
+Potem:
 
 ```text
-Oto cel zadania.
-Oto reguły repozytorium.
-Oto stabilne ograniczenia techniczne.
-Oto kryterium zakończenia.
-
-Zmienne dane z tego uruchomienia:
-- data: 2026-06-24
-- run id: 8d1...
-- skrót błędu: ...
+Teraz przeczytaj tylko pliki potrzebne do implementacji planu.
+Nie skanuj całego repozytorium.
+Nie wklejaj pełnych logów, tylko istotny fragment błędu.
 ```
 
-Jeżeli budujesz własny harness, ta zasada jest jeszcze ważniejsza. Sortuj definicje narzędzi deterministycznie. Nie generuj dynamicznych opisów tooli. Nie wkładaj timestampów przed instrukcje systemowe. Nie zmieniaj kolejności dużych bloków tylko dlatego, że mapa JSON akurat zwróciła inną kolejność.
+W pracy z Playwrightem:
 
-## Playbook 3: subagenci izolują hałas, ale mają własny koszt
+```text
+Najpierw użyj Playwright CLI do eksploracji strony.
+Zapisz tylko stabilne obserwacje:
+- role i nazwy dostępności;
+- dostępne data-testid;
+- ważne stany po kliknięciach;
+- URL lub route, jeśli ma znaczenie;
+- brakujące selektory, jeśli trzeba poprawić aplikację.
+```
 
-Subagent jest świetny, gdy chcesz oddzielić hałas od głównego wątku. Może przejrzeć logi, sprawdzić ryzyka, zrobić code review albo porównać kilka obszarów kodu. Codex manual opisuje subagentów jako dobry wybór do zadań read-heavy: eksploracji, testów, triage'u i podsumowań. Jednocześnie ostrzega, że subagenci zużywają więcej tokenów niż porównywalny pojedynczy run, bo każdy robi własną pracę modelu i narzędzi.
+To daje agentowi praktyczne dane, ale nie zalewa głównego wątku pełnym dumpem DOM, screenshotów i logów.
+
+## Jak używać subagentów
+
+Subagenci nie są sposobem na darmowe przyspieszenie. Codex manual jasno opisuje tradeoff: każdy subagent wykonuje własną pracę modelu i narzędzi, więc multi-agent może zużyć więcej tokenów niż pojedynczy run. Warto ich używać wtedy, gdy izolacja szumu albo równoległość naprawdę daje zysk.
 
 Używaj subagentów do:
 
-- niezależnego code review;
-- analizy dużych logów;
-- eksploracji kilku oddzielnych obszarów repozytorium;
-- sprawdzenia hipotez bez zaśmiecania głównego wątku;
-- zadań read-only, które można wykonać równolegle.
+- read-only code review;
+- analizy logów;
+- porównania kilku niezależnych hipotez;
+- eksploracji różnych obszarów repozytorium;
+- sprawdzenia test gaps;
+- security / reliability review;
+- streszczenia dużego materiału do krótkiego raportu.
 
-Uważaj na subagentów przy:
+Nie używaj subagentów do:
 
-- edycji tych samych plików;
-- zmianach architektury;
-- zadaniach wymagających częstej synchronizacji;
-- sytuacjach, gdzie główny agent może zrobić pracę w jednej krótkiej sesji.
+- równoległej edycji tych samych plików;
+- zadań, które wymagają ciągłej synchronizacji;
+- naprawiania tego samego błędu przez pięć agentów naraz;
+- pracy, którą główny agent zrobi w jednej krótkiej turze;
+- przerzucania pełnych logów z subagentów do głównego wątku.
 
 Dobry prompt:
 
 ```text
-Uruchom trzech subagentów read-only:
-1. ryzyka selektorów i Page Objectów,
-2. ryzyka danych testowych i fixture'ów,
-3. brakujące asercje i regresje.
+Uruchom trzech subagentów read-only.
 
-Każdy subagent ma zwrócić tylko:
-- najważniejsze ustalenia z referencjami do plików,
-- rekomendowaną poprawkę,
-- poziom pewności,
+Subagent 1: przejrzy ryzyka selektorów i Page Objectów.
+Subagent 2: przejrzy ryzyka danych testowych i fixture'ów.
+Subagent 3: przejrzy brakujące asercje i potencjalne regresje.
+
+Każdy subagent ma zwrócić wyłącznie:
+- 3-5 najważniejszych ustaleń;
+- referencje do plików;
+- rekomendowaną poprawkę;
 - informację, czy potrzebna jest edycja kodu.
 
 Nie edytuj plików, dopóki wszystkie raporty nie wrócą.
+Nie wklejaj pełnych logów subagentów do głównego wątku.
 ```
 
-Największa korzyść dla głównego kontekstu polega na tym, że nie wklejasz do niego całego szumu. Wraca krótki raport, a nie kilkaset linii logów i obserwacji.
+Zły prompt:
 
-## Playbook 4: kompaktuj na granicach etapów
+```text
+Uruchom 5 agentów i niech każdy spróbuje naprawić testy.
+Potem połącz najlepsze zmiany.
+```
 
-Kompakcja nie jest darmowym "odświeżeniem jakości". To wymiana długiej historii na streszczenie. Claude Code opisuje `/compact` jako operację, która zastępuje historię rozmowy podsumowaniem. To zmienia warstwę rozmowy, więc powinno dziać się na naturalnej granicy pracy.
+Problem: dostaniesz konflikty, powielone decyzje, dużo outputu i mało kontroli.
 
-Dobre momenty na kompakcję:
+## Jak używać kompakcji
 
-- po zakończonej eksploracji;
-- po zakończonej implementacji;
-- po review, zanim zacznie się naprawianie;
-- przed przejściem do nowego niezależnego obszaru.
+Kompakcja ma sens, ale trzeba ją robić na granicy etapu. W Claude Code `/compact` zastępuje historię rozmowy streszczeniem. To może być dobre po zakończonej eksploracji, ale złe w środku debugowania, gdy szczegóły stack trace'a nadal są ważne.
+
+Dobre momenty:
+
+- eksploracja zakończona, przechodzimy do implementacji;
+- implementacja zakończona, przechodzimy do review;
+- review zakończone, przechodzimy do poprawek;
+- zadanie zakończone, zaczynamy nowe.
 
 Złe momenty:
 
-- w środku debugowania;
-- tuż po otrzymaniu ważnego stack trace'a;
-- kiedy agent nadal potrzebuje szczegółów wcześniejszej decyzji;
-- automatycznie, tylko dlatego że rozmowa jest długa.
+- test właśnie padł i agent analizuje stack trace;
+- agent porównuje dwie hipotezy;
+- trzeba pamiętać szczegóły wcześniejszej decyzji;
+- kompakcja jest automatyczną reakcją na "długi kontekst", bez handoffu.
 
-Praktyczny prompt przed kompakcją:
+Przed kompakcją każ agentowi przygotować handoff:
 
 ```text
-Zanim skompaktujesz kontekst, przygotuj krótki handoff:
-- aktualny cel,
-- zmienione pliki,
-- podjęte decyzje,
-- uruchomione testy i wyniki,
-- otwarte ryzyka,
-- dokładny następny krok.
+Zanim skompaktujesz kontekst, zapisz handoff:
+- cel zadania;
+- zmienione pliki;
+- decyzje architektoniczne;
+- testy uruchomione i wyniki;
+- aktualny błąd albo brak błędu;
+- następny konkretny krok.
+
+Ma to być krótkie i operacyjne, bez pełnych logów.
 ```
 
-## Playbook 5: mierz cache, nie zgaduj
+## Jak mierzyć, czy cache działa
 
-Jeżeli używasz API OpenAI, patrz na `cached_tokens`. Jeżeli używasz Anthropic API, obserwuj tokeny zapisu i odczytu cache'u. Jeżeli używasz Gemini, sprawdzaj pole usage metadata związane z cache hits. Jeżeli pracujesz przez gotowe narzędzie, patrz chociaż na koszt, latency i zachowanie pierwszej tury po zmianie modelu albo kompakcji.
+Jeżeli używasz gotowego narzędzia, często nie zobaczysz pełnych metryk. Nadal możesz obserwować objawy: pierwsza tura po zmianie modelu jest wolniejsza, pierwsza tura po przerwie może być droższa, a po stabilnej pracy kolejne tury powinny być szybsze.
 
-Minimalny zestaw metryk dla własnego harnessu:
+Jeżeli używasz API albo własnego harnessu, loguj:
 
 | Metryka | Po co |
 | --- | --- |
-| input tokens | rozmiar wejścia |
-| cached tokens / cache read tokens | realny hit rate |
-| cache write tokens | koszt budowania cache'u |
+| input tokens | wielkość promptu |
+| cached tokens / cache read tokens | czy prefiks faktycznie trafia w cache |
+| cache write tokens | koszt budowania cache'a |
 | output tokens | koszt, którego cache nie obniża |
-| time to first token | efekt na latency |
-| model i reasoning effort | porównywalność wyników |
-| hash stabilnego prefiksu | wykrywanie przypadkowych zmian |
-| hash definicji narzędzi | wykrywanie cache-breakerów |
+| time to first token | efekt cache'a na latency |
+| model | wykrycie przypadkowych zmian |
+| reasoning / effort | wykrycie osobnych cache keys |
+| hash tool definitions | wykrycie zmian w narzędziach |
+| hash stable prefix | wykrycie losowego szumu na początku |
 
-Jeżeli po kilku turach `cached_tokens` nadal wynosi zero, sprawdź:
+Jeżeli hit rate jest słaby, sprawdź po kolei:
 
-- czy prompt przekracza minimalny próg tokenów;
-- czy wspólny kontekst naprawdę jest na początku;
-- czy nie zmieniasz modelu albo effort level;
-- czy definicje narzędzi nie zmieniają kolejności;
-- czy kolejne requesty są wykonywane wystarczająco blisko siebie;
-- czy provider i model obsługują dany tryb cache'u.
+1. Czy wspólny kontekst jest naprawdę na początku?
+2. Czy w pierwszych liniach nie ma timestampów, run id albo losowych danych?
+3. Czy model i effort są stabilne?
+4. Czy narzędzia nie zmieniają kolejności ani opisu?
+5. Czy nie restartujesz pracy w innym katalogu?
+6. Czy nie kompaktujesz w środku zadania?
+7. Czy przerwy między turami nie przekraczają TTL cache'a?
 
-## Playbook 6: traktuj plany jako osobny poziom cache'u
+## Jak projektować własny harness
 
-Prompt cache dotyczy prefiksu promptu, ale w agentach istnieje jeszcze inny rodzaj oszczędności: ponowne używanie planów. OpenReview paper **"Agentic Plan Caching: Test-Time Memory for Fast and Cost-Efficient LLM Agents"** opisuje podejście, w którym system zapisuje szablony planów z wcześniejszych wykonań i adaptuje je do podobnych zadań. Autorzy raportują redukcję kosztów o około 50% i latency o około 27% przy zachowaniu większości jakości.
+Jeżeli budujesz własnego agenta, to największy wpływ na cache masz nie w promptcie użytkownika, tylko w sposobie składania requestu.
 
-W pracy codziennej nie trzeba od razu budować systemu plan caching. Wystarczy praktyczna wersja:
+Dobry układ requestu:
 
-- trzymaj sprawdzone prompt templates;
-- zapisuj dobre workflowy w `AGENTS.md`, skillach albo playbookach;
-- po udanej implementacji dopisz krótką checklistę;
-- po powtarzającym się błędzie dopisz regułę do repozytorium;
-- nie każ agentowi odkrywać od zera tego samego procesu przy każdym zadaniu.
+```text
+1. System policy
+2. Rola agenta i zasady pracy
+3. Stabilne definicje narzędzi
+4. Reguły repozytorium
+5. Krótka mapa projektu
+6. Historia rozmowy i wyniki narzędzi
+7. Najnowsza prośba użytkownika
+8. Zmienne dane z bieżącego uruchomienia
+```
 
-To jest inny poziom cache'u: nie cache tokenów, tylko cache sposobu pracy.
+Zasady dla harnessu:
 
-## Typowe cache-breakery
+- deterministycznie sortuj narzędzia;
+- nie generuj dynamicznych opisów tooli;
+- nie wkładaj timestampów do system promptu;
+- nie dopisuj run id przed stabilnymi instrukcjami;
+- trzymaj output tooli na końcu;
+- streszczaj długie logi przed dodaniem do głównego wątku;
+- loguj hash stabilnego prefiksu;
+- wykrywaj zmiany modelu, effort i tool schema jako osobne zdarzenia;
+- jeżeli provider ma cache breakpoints, ustawiaj je na stabilnych blokach, nie na logach.
 
-Najczęściej cache psują:
+Zły wzorzec:
 
-- zmiana modelu;
-- zmiana reasoning effort;
-- zmiana lub przeładowanie narzędzi;
-- podłączenie albo odłączenie MCP, jeżeli definicje narzędzi trafiają do prefiksu;
-- zmiana pluginu, który zmienia narzędzia;
-- zmiana instrukcji systemowej;
-- upgrade narzędzia kodującego;
-- kompakcja w środku zadania;
-- restart w innym katalogu roboczym albo worktree;
-- dynamiczne dane na początku promptu;
-- nadmiarowe logi w głównym wątku.
+```text
+Run id: 91f...
+Current time: 2026-06-24 20:14:02
+Random session note: ...
+<system policy>
+<tools>
+<repo rules>
+```
 
-Nie każda platforma zachowa się identycznie. Niektóre narzędzia odkładają definicje narzędzi poza stabilny prefiks albo używają deferred tool loading. Dlatego najlepsza reguła jest prosta: **traktuj zmianę konfiguracji agenta jako potencjalnie kosztowną granicę**.
+Lepszy wzorzec:
 
-## Proponowany workflow dla agenta kodującego
+```text
+<system policy>
+<tools>
+<repo rules>
+<stable project map>
 
-1. **Warm-up:** wybierz model i reasoning, wczytaj reguły, ustal cel.
-2. **Eksploracja:** przeczytaj tylko potrzebne pliki i stronę aplikacji.
-3. **Plan:** zapisz krótki plan, zanim pojawi się dużo logów.
-4. **Implementacja:** pracuj w jednym wątku, dopisując wyniki testów na końcu.
-5. **Subagenci:** deleguj read-only review, log analysis albo niezależne skany.
-6. **Walidacja:** uruchom najpierw nowe testy, potem pełny zestaw.
-7. **Handoff:** przed kompakcją zapisz decyzje, pliki, testy i następny krok.
-8. **Nowy etap:** zaczynaj od krótkiego stabilnego streszczenia, nie od pełnej historii.
+Current run:
+- time: 2026-06-24 20:14:02
+- run id: 91f...
+```
+
+## Gotowa checklista do pracy z agentem
+
+Przed startem:
+
+- wybierz model;
+- wybierz effort / reasoning;
+- upewnij się, że MCP i narzędzia są podłączone;
+- przeczytaj `AGENTS.md`;
+- zdefiniuj "done when";
+- poproś o krótki plan.
+
+W trakcie:
+
+- nie zmieniaj modelu bez powodu;
+- nie zmieniaj effort w połowie debugowania;
+- nie wklejaj pełnych logów;
+- uruchamiaj subagentów głównie read-only;
+- streszczaj raporty subagentów;
+- dopisuj zmienne dane na końcu;
+- testuj w małych krokach.
+
+Przed kompakcją:
+
+- zapisz handoff;
+- usuń z handoffu pełne logi;
+- zachowaj decyzje, pliki, testy i następny krok;
+- kompaktuj tylko na granicy etapu.
+
+Po zakończeniu:
+
+- dopisz powtarzalną lekcję do `AGENTS.md` albo playbooka;
+- zaktualizuj plan testów, jeśli zadanie dotyczy pokrycia;
+- nie zostawiaj wiedzy tylko w historii rozmowy.
 
 ## Gotowy blok do `AGENTS.md`
 
@@ -269,6 +350,7 @@ Nie każda platforma zachowa się identycznie. Niektóre narzędzia odkładają 
 - Pick the model and reasoning level at the start of a task; avoid switching mid-task unless the benefit is explicit.
 - Keep durable instructions in AGENTS.md or referenced playbooks, not repeated ad hoc in every prompt.
 - Put stable task context before volatile logs, diffs, timestamps, or run ids.
+- Avoid connecting/disconnecting MCP servers or changing tool sets mid-task.
 - Use subagents mainly for read-heavy exploration, review, log analysis, and independent summaries.
 - Do not run parallel write-heavy agents against the same files unless the merge plan is explicit.
 - Compact only at task boundaries and leave a short handoff before compaction.
@@ -277,27 +359,24 @@ Nie każda platforma zachowa się identycznie. Niektóre narzędzia odkładają 
 
 ## Krótka wersja do slajdu
 
-Cache premiuje stabilny prefiks.
+Cache w agentach kodujących to dyscyplina pracy, nie przełącznik.
 
-- Model i reasoning wybierz na starcie.
-- Reguły projektu trzymaj w stałym miejscu.
-- Zmienny szum doklejaj na końcu.
-- Subagentów używaj do izolacji, nie jako darmowego mnożnika.
-- Kompaktuj na granicach etapów.
-- Mierz `cached_tokens`, latency i output tokens.
-- Powtarzalne workflowy zapisuj jako playbooki, skille albo reguły repozytorium.
+- Ustal model, effort i narzędzia na starcie.
+- Reguły trzymaj w `AGENTS.md`, nie wklejaj ich ciągle ręcznie.
+- Stabilny kontekst dawaj wysoko, logi i wyniki tooli nisko.
+- Subagentów używaj do izolacji szumu, głównie read-only.
+- Nie zmieniaj MCP/pluginów/modelu w środku długiego zadania.
+- Kompaktuj tylko na granicach etapów.
+- Mierz cache hit rate, output tokens i latency.
 
 ## Źródła
 
-- Claude Code docs: <https://code.claude.com/docs/en/prompt-caching>
-- Claude API docs, prompt caching: <https://platform.claude.com/docs/en/build-with-claude/prompt-caching>
+- Claude Code docs, prompt caching: <https://code.claude.com/docs/en/prompt-caching>
 - OpenAI API docs, prompt caching: <https://developers.openai.com/api/docs/guides/prompt-caching>
 - OpenAI, "Unrolling the Codex agent loop": <https://openai.com/index/unrolling-the-codex-agent-loop/>
-- Google Gemini API docs, context caching: <https://ai.google.dev/gemini-api/docs/caching>
-- Amazon Bedrock docs, prompt caching: <https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-caching.html>
+- Claude API docs, prompt caching: <https://platform.claude.com/docs/en/build-with-claude/prompt-caching>
 - "Don't Break the Cache: An Evaluation of Prompt Caching for Long-Horizon Agentic Tasks": <https://arxiv.org/html/2601.06007v2>
-- "Agentic Plan Caching: Test-Time Memory for Fast and Cost-Efficient LLM Agents": <https://openreview.net/pdf?id=n4V3MSqK77>
 - Codex manual, sekcje "Subagents" i "Best practices", pobrane 2026-06-24 przez OpenAI docs helper.
-- Cameron Wolfe X post podany przez użytkownika: <https://x.com/cwolferesearch/status/2054202312436953270>. Bezpośrednia treść posta nie była możliwa do pobrania w tym środowisku, więc link służy jako inspiracja tematu, nie jako źródło szczegółowych twierdzeń.
+- Cameron Wolfe X post podany przez użytkownika: <https://x.com/cwolferesearch/status/2054202312436953270>. Bezpośrednia treść posta nie była możliwa do pobrania w tym środowisku, więc link traktuję jako inspirację tematu, nie jako źródło szczegółowych twierdzeń.
 
 Stan na: 2026-06-24.
