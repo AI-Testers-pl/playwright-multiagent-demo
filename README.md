@@ -1,55 +1,55 @@
 # Playwright Multi-Agent Demo
 
-This repository packages the course demo as a monorepo-style comparison:
+To repozytorium pakuje demo kursowe jako porownanie w stylu monorepo:
 
-- `main/` is the starting project before the multi-agent implementation.
-- `wynik/` is the finished result after applying the prompt.
-- `PROMPT.md` is the root-level implementation prompt that drives the change from `main/` to `wynik/`.
-- `BONUS-playwright-cli-vs-mcp.md` is a Polish bonus note comparing Playwright CLI and Playwright MCP for agentic testing workflows.
-- `slides/` contains the HTML slide deck copied from `~/IdeaProjects/empty2/multiagent-html-slides`.
+- `main/` to projekt startowy sprzed implementacji multi-agentowej.
+- `wynik/` to gotowy rezultat po zastosowaniu prompta.
+- `PROMPT.md` to prompt implementacyjny w glownym katalogu repozytorium, ktory opisuje przejscie od `main/` do `wynik/`.
+- `BONUS-playwright-cli-vs-mcp.md` to bonusowa notatka po polsku porownujaca Playwright CLI i Playwright MCP w workflow testow agentowych.
+- `slides/` zawiera deck HTML skopiowany z `~/IdeaProjects/empty2/multiagent-html-slides`.
 
-The intended reading flow is:
+Sugerowana kolejnosc czytania:
 
-1. Open `PROMPT.md`.
-2. Read `BONUS-playwright-cli-vs-mcp.md` for the optional CLI vs MCP context.
-3. Inspect the starting point in `main/`.
-4. Compare it with the completed implementation in `wynik/`.
-5. Use `slides/index.html` or `slides/multiagent-slides.pdf` while presenting the workflow.
+1. Otworz `PROMPT.md`.
+2. Przeczytaj `BONUS-playwright-cli-vs-mcp.md`, jezeli chcesz dodatkowy kontekst CLI vs MCP.
+3. Obejrzyj punkt startowy w `main/`.
+4. Porownaj go z gotowa implementacja w `wynik/`.
+5. Uzyj `slides/index.html` albo `slides/multiagent-slides.pdf` podczas prezentacji workflow.
 
-## How The Demo Works
+## Jak dziala demo
 
-The prompt asks a supervising coding agent to split one larger Playwright UI testing task into three parallel subagent workstreams:
+Prompt prosi agenta nadzorujacego o podzielenie wiekszego zadania z testami UI w Playwright na trzy rownolegle strumienie pracy subagentow:
 
-- LLM workflow tests.
-- Admin product management and access tests.
-- Profile and authentication recovery tests.
+- testy workflow LLM,
+- testy zarzadzania produktami i dostepu administracyjnego,
+- testy profilu oraz odzyskiwania dostepu do konta.
 
-Each subagent owns a focused slice of pages and test files, explores the production app with Playwright CLI, implements page objects and tests, and reports only its changed files, test results, risks, and shared-file touches.
+Kazdy subagent dostaje osobny wycinek odpowiedzialnosci: konkretne strony, page objecty i testy. Subagent eksploruje aplikacje produkcyjna przez Playwright CLI, implementuje page objecty oraz testy, a na koniec raportuje tylko zmienione pliki, uruchomione testy, wynik, ryzyka i ewentualne dotkniete pliki wspoldzielone.
 
-After the subagents finish, the supervising agent integrates the work, reviews the combined result, extracts duplicated helpers where needed, checks for brittle selectors and hardcoded data, and runs final validation against:
+Po zakonczeniu pracy subagentow agent nadzorujacy integruje calosc, robi review polaczonego wyniku, wyciaga zduplikowane helpery tam, gdzie ma to sens, sprawdza selektory, twardo wpisane dane i twardo wpisane URL-e, a na koncu uruchamia walidacje przeciwko:
 
 ```bash
 APP_BASE_URL=https://aitesters.byst.re
 ```
 
-## Difference Between `main/` And `wynik/`
+## Roznica miedzy `main/` i `wynik/`
 
-`main/` contains the baseline Playwright project with the existing test coverage, fixtures, page objects, API clients, and local Playwright CLI skill files.
+`main/` zawiera bazowy projekt Playwright: istniejace testy, fixtures, page objecty, klientow API oraz lokalne pliki skilla Playwright CLI.
 
-`wynik/` contains the expanded implementation produced by the multi-agent workflow. The major additions are:
+`wynik/` zawiera rozszerzona implementacje wygenerowana w workflow multi-agentowym. Najwazniejsze dodatki to:
 
-- New LLM page objects and UI coverage under `pages/Llm*` and `tests/ui/llm/`.
-- New admin product management page objects and tests.
-- New profile, forgot password, and reset password page objects and tests.
-- Additional data generation support, including product generation.
-- Updates to fixtures, product API client behavior, and the high-level UI test implementation plan.
-- A materialized `.agents/skills/playwright-cli/` directory for agent-oriented Playwright exploration.
+- nowe page objecty LLM i pokrycie UI w `pages/Llm*` oraz `tests/ui/llm/`,
+- nowe page objecty i testy zarzadzania produktami przez admina,
+- nowe page objecty i testy profilu, resetu hasla oraz odzyskiwania dostepu,
+- dodatkowe wsparcie dla generowania danych, w tym generator produktow,
+- aktualizacje fixtures, klienta API produktow i wysokopoziomowego planu implementacji testow UI,
+- zmaterializowany katalog `.agents/skills/playwright-cli/` do eksploracji Playwright przez agenta.
 
-In short: `main/` is the input, `PROMPT.md` is the instruction, and `wynik/` is the output.
+W skrocie: `main/` to wejscie, `PROMPT.md` to instrukcja, a `wynik/` to rezultat.
 
-## Running Either Project
+## Uruchamianie projektu
 
-Run commands from inside the project folder you want to inspect:
+Komendy uruchamiaj z katalogu projektu, ktory chcesz sprawdzic:
 
 ```bash
 cd main
@@ -57,7 +57,7 @@ npm ci
 npm run test:ui
 ```
 
-or:
+albo:
 
 ```bash
 cd wynik
@@ -65,4 +65,4 @@ npm ci
 npm run test:ui
 ```
 
-Both folders are configured for the same production demo target through their project files.
+Oba katalogi sa skonfigurowane pod ten sam produkcyjny target demo przez swoje pliki projektowe.
