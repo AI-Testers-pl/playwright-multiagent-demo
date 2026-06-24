@@ -2,7 +2,7 @@
 
 Ten bonus porównuje dwa sposoby używania Playwrighta w pracy z agentami AI: **Playwright CLI** z repozytorium `microsoft/playwright-cli` oraz **Playwright MCP** z repozytorium `microsoft/playwright-mcp`.
 
-Oba narzędzia rozwiązują podobny problem: pozwalają agentowi sterować przeglądarką. Różnią się jednak stylem pracy. W praktyce Playwright CLI lepiej pasuje do agenta kodującego, który działa w repozytorium i korzysta z terminala, a Playwright MCP lepiej pasuje do klientów MCP i interaktywnego eksplorowania strony z poziomu narzędzi takich jak VS Code, Cursor, Windsurf czy Claude Desktop.
+Oba narzędzia rozwiązują podobny problem: pozwalają agentowi sterować przeglądarką. Oba mogą też dobrze działać w pracy agenta kodującego. Różnica jest bardziej subtelna: Playwright CLI jest bardziej terminalowe i bezpośrednie, a Playwright MCP jest bardziej protokołowe i integracyjne. W praktyce wybór zależy mniej od samego Playwrighta, a bardziej od tego, czy Twój workflow opiera się na terminalu, czy na kliencie AI z dobrze skonfigurowanym MCP.
 
 ## Najpierw ważne rozróżnienie
 
