@@ -117,6 +117,22 @@ W bardziej sformalizowanych środowiskach, np. korporacyjnych albo bankowych, Pl
 
 Na końcu oba produkty rozwiązują ten sam problem: dają agentowi dostęp do przeglądarki. W praktyce warto traktować je jako różne implementacje tej samej idei, a nie jako narzędzia z zupełnie innych światów.
 
+```mermaid
+flowchart TD
+    A["Agent AI potrzebuje dostępu do przeglądarki"]
+
+    A --> B["Playwright CLI"]
+    A --> C["Playwright MCP"]
+
+    B --> B1["Prosty workflow terminalowy"]
+    B --> B2["Bez uruchamiania serwera MCP"]
+    B --> B3["Wygodne dla agenta kodującego w repozytorium"]
+
+    C --> C1["Standardowy protokół narzędzi"]
+    C --> C2["Lepsze dopasowanie do klientów MCP"]
+    C --> C3["Naturalniejszy wybór w bardziej sformalizowanych środowiskach"]
+```
+
 ## Źródła i materiały
 
 ### Źródła podstawowe
