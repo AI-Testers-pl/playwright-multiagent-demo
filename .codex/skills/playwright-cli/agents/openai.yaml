@@ -1,4 +1,0 @@
-interface:
-  display_name: "Playwright CLI"
-  short_description: "Automate browsers and Playwright test workflows"
-  default_prompt: "Use $playwright-cli to inspect a local page, interact with it, and summarize what you find."
