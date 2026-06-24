@@ -68,14 +68,6 @@ MCP jest więc wygodne wtedy, gdy workflow jest zbudowany wokół klientów MCP 
 | Artefakty | Snapshoty, screenshoty, trace, video, storage state w lokalnym workflow | Snapshoty i akcje dostępne przez protokół MCP |
 | Debugowanie w repo | Łatwe do połączenia z komendami `npm`, testami i plikami projektu | Dobre do eksploracji, ale bardziej zależne od integracji narzędzia |
 
-## Kiedy wybrać które narzędzie
-
-Playwright CLI wybrałbym wtedy, gdy agent ma pracować jak programista w repozytorium: eksplorować aplikację przed napisaniem testu, generować albo poprawiać Page Objecty, uruchamiać `npm run test:ui`, zapisywać screenshoty i trace oraz pracować na izolowanych sesjach, np. osobno dla administratora, zwykłego użytkownika i osoby niezalogowanej.
-
-W takim scenariuszu ważna jest prostota. Agent ma terminal, pliki i testy w jednym miejscu. Nie trzeba dokładać osobnego serwera MCP ani pamiętać o jego cyklu życia. Dla wielu zadań testowych to po prostu mniej ruchomych części.
-
-Playwright MCP wybrałbym wtedy, gdy zespół pracuje już w kliencie dobrze obsługującym MCP albo gdy organizacja chce mieć bardziej standardowy sposób podłączania narzędzi do agenta. MCP jest też naturalniejsze, gdy eksploracja strony ma być bardziej interaktywna i wykonywana z poziomu środowiska, które traktuje narzędzia MCP jako podstawowy mechanizm integracji.
-
 ## Jak ja o tym myślę
 
 Osobiście najczęściej wybieram Playwright CLI, bo jest prostszy operacyjnie. Nie muszę pamiętać o uruchamianiu i wyłączaniu serwera MCP, nie dokładam kolejnej warstwy konfiguracji i mogę traktować eksplorację przeglądarki jak zwykły element pracy w terminalu.
