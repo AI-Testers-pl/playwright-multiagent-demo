@@ -26,6 +26,18 @@ Claude Code docs bardzo konkretnie pokazują, że model i effort są częścią 
 
 W długiej sesji warto więc traktować zmianę modelu, effortu, zestawu narzędzi, pluginów, katalogu roboczego albo worktree jak zmianę etapu, a nie jak neutralny szczegół. Podobnie jest z `/compact` w środku debugowania: czasem pomaga odzyskać miejsce w kontekście, ale zastępuje historię streszczeniem i zmienia dalszy przebieg pracy.
 
+Najbardziej praktyczna wersja tej zasady wygląda tak:
+
+| Zmiana | Co zwykle oznacza |
+| --- | --- |
+| Zmiana modelu | osobny cache dla nowej konfiguracji |
+| Zmiana effort / reasoning | nowy wariant pracy modelu |
+| Podłączenie MCP w trakcie zadania | inny zestaw narzędzi w kontekście |
+| Włączenie albo wyłączenie pluginu | potencjalna zmiana tool definitions |
+| `/compact` w środku debugowania | historia zostaje zastąpiona streszczeniem |
+| Upgrade narzędzia kodującego | możliwa zmiana system promptu |
+| Start w innym katalogu lub worktree | inny kontekst roboczy |
+
 Nie chodzi o to, że takich rzeczy nigdy nie wolno robić. Czasem trzeba. Chodzi o moment. Jeżeli zmiana jest potrzebna, zrób krótki handoff: co robimy, jakie pliki zostały zmienione, jakie testy przeszły i co jest następnym krokiem. Potem potraktuj dalszą pracę jak nowy etap, a nie kontynuację tej samej stabilnej sesji.
 
 ## Co można robić bez paniki
@@ -48,6 +60,10 @@ Wtedy prompt caching przestaje być abstrakcyjną funkcją providera. Staje się
 
 ## Źródła
 
-Główne źródła do tego bonusu to dokumentacja Claude Code o prompt caching: <https://code.claude.com/docs/en/prompt-caching>, dokumentacja OpenAI API o prompt caching: <https://developers.openai.com/api/docs/guides/prompt-caching>, tekst OpenAI "Unrolling the Codex agent loop": <https://openai.com/index/unrolling-the-codex-agent-loop/>, dokumentacja Claude API o prompt caching: <https://platform.claude.com/docs/en/build-with-claude/prompt-caching> oraz artykuł "Don't Break the Cache: An Evaluation of Prompt Caching for Long-Horizon Agentic Tasks": <https://arxiv.org/html/2601.06007v2>.
+- Claude Code docs, prompt caching: <https://code.claude.com/docs/en/prompt-caching>
+- OpenAI API docs, prompt caching: <https://developers.openai.com/api/docs/guides/prompt-caching>
+- OpenAI, "Unrolling the Codex agent loop": <https://openai.com/index/unrolling-the-codex-agent-loop/>
+- Claude API docs, prompt caching: <https://platform.claude.com/docs/en/build-with-claude/prompt-caching>
+- "Don't Break the Cache: An Evaluation of Prompt Caching for Long-Horizon Agentic Tasks": <https://arxiv.org/html/2601.06007v2>
 
 Stan na: 2026-06-24.
